@@ -1,97 +1,57 @@
-// mobile/components/dashboard/StatsCard.tsx
+// components/dashboard/StatsCard.tsx
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import * as Feather from "react-native-feather";
+import { View, Text, StyleSheet, ViewStyle } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 
-type StatsCardProps = {
+export interface StatsCardProps {
   title: string;
   value: string;
-  change?: string;   // optional now
-  desc?: string;     // optional now
-  icon: keyof typeof iconMap;
-  bgColor?: string;
-  textColor?: string;
-};
+  change?: string;
+  desc?: string;
+  icon: keyof typeof MaterialIcons.glyphMap; // ✅ MaterialIcons
+  bgColor: string;
+  textColor: string;
+  style?: ViewStyle; // allow additional styling
+}
 
-// map of icons you can use
-const iconMap = {
-  users: Feather.Users,
-  wrench: Feather.Tool,
-  box: Feather.Box,
-  dollar: Feather.DollarSign,
-  "dollar-sign": Feather.DollarSign,
-  archive: Feather.Archive,
-  "credit-card": Feather.CreditCard,
-  settings: Feather.Settings,
-  trending: Feather.TrendingUp,
-};
-
-export default function StatsCard({
+const StatsCard: React.FC<StatsCardProps> = ({
   title,
   value,
   change,
   desc,
   icon,
-  bgColor = "#fff",
-  textColor = "#000",
-}: StatsCardProps) {
-  const IconComponent = iconMap[icon];
-
+  bgColor,
+  textColor,
+  style,
+}) => {
   return (
-    <View style={[styles.card, { backgroundColor: bgColor }]}>
-      {/* Icon */}
-      <View style={styles.iconWrapper}>
-        {IconComponent && <IconComponent width={24} height={24} stroke={textColor} />}
-      </View>
-
-      {/* Stats info */}
-      <View style={styles.textWrapper}>
-        <Text style={[styles.title, { color: textColor }]}>{title}</Text>
-        <Text style={[styles.value, { color: textColor }]}>{value}</Text>
-
-        {/* Optional change */}
-        {change && <Text style={styles.change}>{change}</Text>}
-
-        {/* Optional desc */}
-        {desc && <Text style={styles.desc}>{desc}</Text>}
-      </View>
+    <View style={[styles.card, { backgroundColor: bgColor }, style]}>
+      <MaterialIcons name={icon} size={28} color={textColor} style={styles.icon} />
+      <Text style={[styles.title, { color: textColor }]}>{title}</Text>
+      <Text style={[styles.value, { color: textColor }]}>{value}</Text>
+      {change && <Text style={[styles.change, { color: textColor }]}>{change}</Text>}
+      {desc && <Text style={[styles.desc, { color: textColor }]}>{desc}</Text>}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: "row",
     borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
-    alignItems: "center",
     shadowColor: "#000",
     shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 3 },
     shadowRadius: 6,
-    elevation: 3,
+    elevation: 4,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  iconWrapper: {
-    marginRight: 12,
-  },
-  textWrapper: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  value: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginVertical: 4,
-  },
-  change: {
-    fontSize: 12,
-    color: "green",
-  },
-  desc: {
-    fontSize: 12,
-    color: "#666",
-  },
+  icon: { marginBottom: 8 },
+  title: { fontSize: 14, fontWeight: "500" },
+  value: { fontSize: 22, fontWeight: "700", marginVertical: 4 },
+  change: { fontSize: 12, marginTop: 2 },
+  desc: { fontSize: 12, marginTop: 2 },
 });
+
+export default StatsCard;
