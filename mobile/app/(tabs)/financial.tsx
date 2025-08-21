@@ -7,11 +7,8 @@ import Report from '@/components/financial/Report';
 
 const Financial = () => {
   const { width } = useWindowDimensions();
-
-  // 2 cards per row with 16px gaps
   const cardWidth = (width - 16 * 3) / 2;
 
-  // Dynamic date for header (04:59 PM +07, Tuesday, August 19, 2025)
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'long',
@@ -21,7 +18,6 @@ const Financial = () => {
     hour12: true,
   }) + ' (+07)';
 
-  // State to manage which section is active (mimicking tab behavior in dashboard flow)
   const [activeSection, setActiveSection] = useState('overview');
 
   const renderSectionContent = () => {
@@ -41,15 +37,12 @@ const Financial = () => {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* === Header Section === */}
       <View style={styles.header}>
         <Text style={styles.title}>Financial Management</Text>
         <Text style={styles.subtitle}>Track income, expenses, and financial performance as of {currentDate}</Text>
       </View>
 
-      {/* === Top Stats Section === */}
       <View style={styles.grid}>
-        {/* Placeholder for 2x2 grid - Using OverView metrics as base */}
         <View style={[styles.card, { width: cardWidth }]}>
           <Text style={styles.cardTitle}>Total Income</Text>
           <Text style={styles.cardValue}>$24,300</Text>
@@ -72,9 +65,7 @@ const Financial = () => {
         </View>
       </View>
 
-      {/* === Bottom Stats Section === */}
       <View style={styles.grid}>
-        {/* Placeholder for 1x3 grid - Using OverView breakdown as base */}
         <View style={[styles.card, { width: cardWidth }]}>
           <Text style={styles.cardTitle}>Income Sources</Text>
           <Text style={styles.cardValue}>2</Text>
@@ -92,17 +83,14 @@ const Financial = () => {
         </View>
       </View>
 
-      {/* === Recent Activities & Low Stock Alerts Section === */}
       <View style={styles.row}>
         <View style={[styles.column, { flex: 1 }]}>
-          {/* Placeholder for Recent Activities - Could be customized for financial transactions */}
           <View style={styles.placeholderCard}>
             <Text style={styles.placeholderTitle}>Recent Transactions</Text>
             <Text style={styles.placeholderText}>View transaction history here</Text>
           </View>
         </View>
         <View style={[styles.column, { flex: 1 }]}>
-          {/* Placeholder for Low Stock Alerts - Could be customized for financial alerts */}
           <View style={styles.placeholderCard}>
             <Text style={styles.placeholderTitle}>Financial Alerts</Text>
             <Text style={styles.placeholderText}>Check alert status here</Text>
@@ -110,7 +98,6 @@ const Financial = () => {
         </View>
       </View>
 
-      {/* === Detailed Section (Replacing Tabs) === */}
       <View style={styles.content}>
         {renderSectionContent()}
       </View>
