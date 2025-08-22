@@ -3,11 +3,12 @@ import { ScrollView, View, Text, StyleSheet, useWindowDimensions } from 'react-n
 import OverView from '@/components/financial/OverView';
 import Income from '@/components/financial/Income';
 import Expense from '@/components/financial/Expense';
+import Sale from '@/components/financial/Sale';
 import Report from '@/components/financial/Report';
 
 const Financial = () => {
   const { width } = useWindowDimensions();
-  const cardWidth = (width - 16 * 3) / 2;
+  const cardWidth = (width - 16 * 4) / 3; // Adjusted for 3 columns with 16px gap on each side
 
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -16,7 +17,7 @@ const Financial = () => {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
-  }) + ' (+07)';
+  }) + ' (+07)'; // Updated to Friday, August 22, 2025, 08:12 AM +07
 
   const [activeSection, setActiveSection] = useState('overview');
 
@@ -28,6 +29,8 @@ const Financial = () => {
         return <Income />;
       case 'expenses':
         return <Expense />;
+      case 'sales':
+        return <Sale />;
       case 'reports':
         return <Report />;
       default:
@@ -42,61 +45,58 @@ const Financial = () => {
         <Text style={styles.subtitle}>Track income, expenses, and financial performance as of {currentDate}</Text>
       </View>
 
-      <View style={styles.grid}>
-        <View style={[styles.card, { width: cardWidth }]}>
-          <Text style={styles.cardTitle}>Total Income</Text>
-          <Text style={styles.cardValue}>$24,300</Text>
-          <Text style={styles.cardChange}>+12.5% from last month</Text>
-        </View>
-        <View style={[styles.card, { width: cardWidth }]}>
-          <Text style={styles.cardTitle}>Total Expenses</Text>
-          <Text style={styles.cardValue}>$16,700</Text>
-          <Text style={styles.cardChange}>+5.2% from last month</Text>
-        </View>
-        <View style={[styles.card, { width: cardWidth }]}>
-          <Text style={styles.cardTitle}>Net Profit</Text>
-          <Text style={styles.cardValue}>$7,600</Text>
-          <Text style={styles.cardChange}>This month</Text>
-        </View>
-        <View style={[styles.card, { width: cardWidth }]}>
-          <Text style={styles.cardTitle}>Cash Flow</Text>
-          <Text style={styles.cardValue}>$5,200</Text>
-          <Text style={styles.cardChange}>+8.3% from last month</Text>
-        </View>
+      <View style={styles.navTabs}>
+        <Text
+          style={[styles.navTab, activeSection === 'overview' && styles.activeTab]}
+          onPress={() => setActiveSection('overview')}
+        >
+          Overview
+        </Text>
+        <Text
+          style={[styles.navTab, activeSection === 'income' && styles.activeTab]}
+          onPress={() => setActiveSection('income')}
+        >
+          Income
+        </Text>
+        <Text
+          style={[styles.navTab, activeSection === 'expenses' && styles.activeTab]}
+          onPress={() => setActiveSection('expenses')}
+        >
+          Expenses
+        </Text>
+        <Text
+          style={[styles.navTab, activeSection === 'sales' && styles.activeTab]}
+          onPress={() => setActiveSection('sales')}
+        >
+          Sales
+        </Text>
+        <Text
+          style={[styles.navTab, activeSection === 'reports' && styles.activeTab]}
+          onPress={() => setActiveSection('reports')}
+        >
+          Reports
+        </Text>
       </View>
 
-      <View style={styles.grid}>
-        <View style={[styles.card, { width: cardWidth }]}>
-          <Text style={styles.cardTitle}>Income Sources</Text>
-          <Text style={styles.cardValue}>2</Text>
-          <Text style={styles.cardDesc}>Active sources</Text>
-        </View>
-        <View style={[styles.card, { width: cardWidth }]}>
-          <Text style={styles.cardTitle}>Expense Categories</Text>
-          <Text style={styles.cardValue}>3</Text>
-          <Text style={styles.cardDesc}>Tracked categories</Text>
-        </View>
-        <View style={[styles.card, { width: cardWidth }]}>
-          <Text style={styles.cardTitle}>Pending Transactions</Text>
-          <Text style={styles.cardValue}>$15,000</Text>
-          <Text style={styles.cardDesc}>Recent sales</Text>
-        </View>
-      </View>
-
-      <View style={styles.row}>
-        <View style={[styles.column, { flex: 1 }]}>
-          <View style={styles.placeholderCard}>
-            <Text style={styles.placeholderTitle}>Recent Transactions</Text>
-            <Text style={styles.placeholderText}>View transaction history here</Text>
+      {activeSection === 'overview' && (
+        <View style={styles.grid}>
+          <View style={[styles.card, { width: cardWidth }]}>
+            <Text style={styles.cardTitle}>Total Income</Text>
+            <Text style={styles.cardValue}>$34,710</Text>
+            <Text style={styles.cardChange}>+12.5% from last month</Text>
+          </View>
+          <View style={[styles.card, { width: cardWidth }]}>
+            <Text style={styles.cardTitle}>Total Expenses</Text>
+            <Text style={styles.cardValue}>$4,400</Text>
+            <Text style={styles.cardChange}>-6.2% from last month</Text>
+          </View>
+          <View style={[styles.card, { width: cardWidth }]}>
+            <Text style={styles.cardTitle}>Net Profit</Text>
+            <Text style={styles.cardValue}>$30,310</Text>
+            <Text style={styles.cardChange}>This month</Text>
           </View>
         </View>
-        <View style={[styles.column, { flex: 1 }]}>
-          <View style={styles.placeholderCard}>
-            <Text style={styles.placeholderTitle}>Financial Alerts</Text>
-            <Text style={styles.placeholderText}>Check alert status here</Text>
-          </View>
-        </View>
-      </View>
+      )}
 
       <View style={styles.content}>
         {renderSectionContent()}
@@ -124,21 +124,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#718096',
   },
+  navTabs: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 24,
+  },
+  navTab: {
+    fontSize: 16,
+    color: '#718096',
+    paddingBottom: 4,
+  },
+  activeTab: {
+    color: '#10b981',
+    borderBottomWidth: 2,
+    borderBottomColor: '#10b981',
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: 16,
     gap: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-  },
-  column: {
-    flex: 1,
-    minWidth: 300,
   },
   card: {
     backgroundColor: '#fff',
@@ -165,32 +171,6 @@ const styles = StyleSheet.create({
   cardChange: {
     fontSize: 12,
     color: '#10b981',
-  },
-  cardDesc: {
-    fontSize: 12,
-    color: '#718096',
-  },
-  placeholderCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 3,
-    height: 150,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  placeholderText: {
-    fontSize: 14,
-    color: '#4b5563',
   },
   content: {
     marginTop: 16,

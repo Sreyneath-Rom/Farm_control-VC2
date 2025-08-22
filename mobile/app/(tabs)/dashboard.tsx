@@ -1,4 +1,4 @@
-// app/(tabs)/dashboard.tsx
+// app/(tabs)/dashboard/index.tsx
 import React from "react";
 import { ScrollView, View, StyleSheet, useWindowDimensions } from "react-native";
 
@@ -9,14 +9,13 @@ import LowStockAlerts from "@/components/dashboard/LowStockAlerts";
 export default function Dashboard() {
   const { width } = useWindowDimensions();
 
-  // 2 cards per row with 16px gaps
-  const cardWidth = (width - 16 * 3) / 2;
+  // 2 cards per row with safe minWidth
+  const cardWidth = Math.max((width - 16 * 3) / 2, 160);
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* === Top Stats Section === */}
       <View style={styles.grid}>
-        
         <StatsCard
           style={{ width: cardWidth }}
           title="Staff Management"
@@ -110,15 +109,15 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "space-between",
     marginBottom: 16,
-    gap: 16, // 16px gap between cards
   },
   row: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 16,
+    marginBottom: 16,
   },
   column: {
     flex: 1,
     minWidth: 300,
   },
 });
+  
