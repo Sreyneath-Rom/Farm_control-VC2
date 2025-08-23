@@ -109,6 +109,8 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "space-between",
     marginBottom: 16,
+    marginTop: 16,
+    gap: 16,
   },
   row: {
     flexDirection: "row",

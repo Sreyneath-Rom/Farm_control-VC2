@@ -4,7 +4,22 @@ import Feather from 'react-native-vector-icons/Feather';
 
 const OverView = () => {
   const { width } = useWindowDimensions();
-  const cardWidth = (width - 16 * 3) / 2;
+
+  // Determine number of columns based on screen width
+  let cardWidth, breakdownWidth;
+  if (width < 480) {
+    // Small screens (e.g., phones in portrait, ~320-480px)
+    cardWidth = width - 32; // Full width with 16px padding on each side
+    breakdownWidth = width - 32;
+  } else if (width < 768) {
+    // Medium screens (e.g., tablets in portrait or larger phones)
+    cardWidth = (width - 16 * 2) / 2; // 2 columns
+    breakdownWidth = (width - 16 * 2) / 2;
+  } else {
+    // Large screens (e.g., tablets in landscape)
+    cardWidth = (width - 16 * 4) / 3; // 3 columns
+    breakdownWidth = (width - 16 * 2) / 2; // 2 columns
+  }
 
   return (
     <View style={styles.container}>
@@ -12,11 +27,11 @@ const OverView = () => {
         <View style={[styles.card, { width: cardWidth }]}>
           <View style={styles.cardContent}>
             <View style={[styles.iconContainer, { backgroundColor: '#10b981' }]}>
-              <Feather name="trending-up" size={24} color="#fff" />
+              <Feather name="trending-up" size={20} color="#fff" /> {/* Reduced size for mobile */}
             </View>
             <View>
               <Text style={styles.cardLabel}>Total Income</Text>
-              <Text style={styles.cardValue}>$24,300</Text>
+              <Text style={styles.cardValue}>$34,710</Text>
               <Text style={styles.cardChange}>+12.5% from last month</Text>
             </View>
           </View>
@@ -25,12 +40,12 @@ const OverView = () => {
         <View style={[styles.card, { width: cardWidth }]}>
           <View style={styles.cardContent}>
             <View style={[styles.iconContainer, { backgroundColor: '#ef4444' }]}>
-              <Feather name="trending-down" size={24} color="#fff" />
+              <Feather name="trending-down" size={20} color="#fff" /> {/* Reduced size for mobile */}
             </View>
             <View>
               <Text style={styles.cardLabel}>Total Expenses</Text>
-              <Text style={styles.cardValue}>$16,700</Text>
-              <Text style={styles.cardChange}>+5.2% from last month</Text>
+              <Text style={styles.cardValue}>$4,400</Text>
+              <Text style={styles.cardChange}>-6.2% from last month</Text>
             </View>
           </View>
         </View>
@@ -38,11 +53,11 @@ const OverView = () => {
         <View style={[styles.card, { width: cardWidth }]}>
           <View style={styles.cardContent}>
             <View style={[styles.iconContainer, { backgroundColor: '#3b82f6' }]}>
-              <Feather name="dollar-sign" size={24} color="#fff" />
+              <Feather name="dollar-sign" size={20} color="#fff" /> {/* Reduced size for mobile */}
             </View>
             <View>
               <Text style={styles.cardLabel}>Net Profit</Text>
-              <Text style={styles.cardValue}>$7,600</Text>
+              <Text style={styles.cardValue}>$30,310</Text>
               <Text style={styles.cardChange}>This month</Text>
             </View>
           </View>
@@ -50,7 +65,7 @@ const OverView = () => {
       </View>
 
       <View style={styles.breakdownGrid}>
-        <View style={[styles.breakdownCard, { width: cardWidth - 8 }]}>
+        <View style={[styles.breakdownCard, { width: breakdownWidth }]}>
           <Text style={styles.breakdownTitle}>Income by Category</Text>
           <View style={styles.breakdownItem}>
             <Text style={styles.breakdownLabel}>Pig Sales</Text>
@@ -62,7 +77,7 @@ const OverView = () => {
           </View>
         </View>
 
-        <View style={[styles.breakdownCard, { width: cardWidth - 8 }]}>
+        <View style={[styles.breakdownCard, { width: breakdownWidth }]}>
           <Text style={styles.breakdownTitle}>Expenses by Category</Text>
           <View style={styles.breakdownItem}>
             <Text style={styles.breakdownLabel}>Feed</Text>
@@ -85,7 +100,7 @@ const OverView = () => {
         </View>
         <View style={styles.transactionItem}>
           <View style={[styles.iconContainer, { backgroundColor: '#10b981' }]}>
-            <Feather name="trending-up" size={20} color="#fff" />
+            <Feather name="trending-up" size={18} color="#fff" /> {/* Reduced size for mobile */}
           </View>
           <View style={styles.transactionDetails}>
             <Text style={styles.transactionName}>50 pigs sold to local market</Text>
@@ -99,70 +114,74 @@ const OverView = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 16 },
+  container: { flex: 1, backgroundColor: '#fff', padding: 1 },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: 16,
-    gap: 8,
+    gap: 8, // Reduced gap for mobile
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: 8,
-    padding: 16,
+    padding: 12, // Reduced padding for mobile
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 }, // Reduced shadow offset
+    shadowRadius: 2,
+    elevation: 1,
+    marginBottom: 12, // Adjusted spacing for mobile
   },
   cardContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8, // Reduced gap for mobile
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
+    width: 40, // Reduced width for mobile
+    height: 40, // Reduced height for mobile
+    borderRadius: 6, // Adjusted radius
     justifyContent: 'center',
     alignItems: 'center',
   },
   cardLabel: {
-    fontSize: 14,
+    fontSize: 12, // Reduced font size for mobile
     color: '#718096',
-    marginBottom: 4,
+    marginBottom: 2, // Reduced margin
   },
   cardValue: {
-    fontSize: 24,
+    fontSize: 18, // Reduced font size for mobile
     fontWeight: 'bold',
     color: '#1a202c',
   },
   cardChange: {
-    fontSize: 12,
+    fontSize: 10, // Reduced font size for mobile
     color: '#10b981',
   },
   breakdownGrid: {
     flexDirection: 'row',
-    gap: 16,
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     marginBottom: 16,
+    gap: 8, // Reduced gap for mobile
   },
   breakdownCard: {
     backgroundColor: '#fff',
     borderRadius: 8,
-    padding: 16,
+    padding: 12, // Reduced padding for mobile
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 }, // Reduced shadow offset
+    shadowRadius: 2,
+    elevation: 1,
+    marginBottom: 12, // Adjusted spacing for mobile
   },
   breakdownTitle: {
-    fontSize: 16,
+    fontSize: 14, // Reduced font size for mobile
     fontWeight: '600',
     color: '#1a202c',
-    marginBottom: 12,
+    marginBottom: 8, // Reduced margin
   },
   breakdownItem: {
     flexDirection: 'row',
@@ -170,54 +189,54 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   breakdownLabel: {
-    fontSize: 14,
+    fontSize: 12, // Reduced font size for mobile
     color: '#718096',
   },
   breakdownValue: {
-    fontSize: 14,
+    fontSize: 12, // Reduced font size for mobile
     fontWeight: '600',
     color: '#10b981',
   },
   transactionCard: {
     backgroundColor: '#fff',
     borderRadius: 8,
-    padding: 16,
+    padding: 12, // Reduced padding for mobile
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 }, // Reduced shadow offset
+    shadowRadius: 2,
+    elevation: 1,
   },
   transactionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8, // Reduced margin
   },
   transactionTitle: {
-    fontSize: 16,
+    fontSize: 14, // Reduced font size for mobile
     fontWeight: '600',
     color: '#1a202c',
   },
   transactionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8, // Reduced gap for mobile
   },
   transactionDetails: {
     flex: 1,
   },
   transactionName: {
-    fontSize: 14,
+    fontSize: 12, // Reduced font size for mobile
     fontWeight: '500',
     color: '#1a202c',
   },
   transactionDesc: {
-    fontSize: 12,
+    fontSize: 10, // Reduced font size for mobile
     color: '#718096',
   },
   transactionAmount: {
-    fontSize: 14,
+    fontSize: 12, // Reduced font size for mobile
     fontWeight: '600',
     color: '#10b981',
   },

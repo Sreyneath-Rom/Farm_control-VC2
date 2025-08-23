@@ -80,33 +80,39 @@ const Income = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerControls}>
-        <View style={styles.searchContainer}>
-          <Feather
-            name="search"
-            size={16}
-            color="#718096"
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search income..."
-          />
-        </View>
+      <View style={styles.header}>
         <TextInput
-          style={styles.filterInput}
-          value={timeFilter}
-          onChangeText={setTimeFilter}
-          placeholder="Filter by time..."
+          style={styles.searchInput}
+          placeholder="Search income records..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholderTextColor="#718096"
         />
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setShowAddForm(!showAddForm)}
-        >
+        <TouchableOpacity style={styles.addButton} onPress={() => setShowAddForm(true)}>
           <Feather name="plus" size={16} color="#fff" />
           <Text style={styles.addButtonText}>Add Income</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.filterRow}>
+        <Text style={styles.filterLabel}>Filter by:</Text>
+        <TouchableOpacity
+          style={[styles.filterButton, timeFilter === 'this-month' && styles.activeFilter]}
+          onPress={() => setTimeFilter('this-month')}
+        >
+          <Text style={styles.filterText}>This Month</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.filterButton, timeFilter === 'last-month' && styles.activeFilter]}
+          onPress={() => setTimeFilter('last-month')}
+        >
+          <Text style={styles.filterText}>Last Month</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.filterButton, timeFilter === 'all-time' && styles.activeFilter]}
+          onPress={() => setTimeFilter('all-time')}
+        >
+          <Text style={styles.filterText}>All Time</Text>
         </TouchableOpacity>
       </View>
 
@@ -116,207 +122,235 @@ const Income = () => {
           <View style={styles.formGrid}>
             <TextInput
               style={styles.input}
-              value={newIncome.category}
-              onChangeText={(text) =>
-                setNewIncome({ ...newIncome, category: text })
-              }
               placeholder="Category"
+              value={newIncome.category}
+              onChangeText={(text) => setNewIncome({ ...newIncome, category: text })}
             />
             <TextInput
               style={styles.input}
-              value={newIncome.description}
-              onChangeText={(text) =>
-                setNewIncome({ ...newIncome, description: text })
-              }
               placeholder="Description"
+              value={newIncome.description}
+              onChangeText={(text) => setNewIncome({ ...newIncome, description: text })}
             />
             <TextInput
               style={styles.input}
-              value={newIncome.customer}
-              onChangeText={(text) =>
-                setNewIncome({ ...newIncome, customer: text })
-              }
               placeholder="Customer"
+              value={newIncome.customer}
+              onChangeText={(text) => setNewIncome({ ...newIncome, customer: text })}
             />
             <TextInput
               style={styles.input}
-              value={newIncome.amount}
-              onChangeText={(text) =>
-                setNewIncome({ ...newIncome, amount: text })
-              }
               placeholder="Amount"
+              value={newIncome.amount}
+              onChangeText={(text) => setNewIncome({ ...newIncome, amount: text })}
               keyboardType="numeric"
             />
             <TextInput
               style={styles.input}
+              placeholder="Date (YYYY-MM-DD)"
               value={newIncome.date}
-              onChangeText={(text) =>
-                setNewIncome({ ...newIncome, date: text })
-              }
-              placeholder="Date"
+              onChangeText={(text) => setNewIncome({ ...newIncome, date: text })}
             />
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={addIncome}
-              >
-                <Text style={styles.buttonText}>Add Income</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setShowAddForm(false)}
-              >
-                <Text style={styles.buttonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
+          </View>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.submitButton} onPress={addIncome}>
+              <Text style={styles.buttonText}>Submit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShowAddForm(false)}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
       )}
 
       <View style={styles.tableContainer}>
-        <FlatList
-          data={filteredIncome}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.tableRow}>
-              <Text style={styles.cell}>{formatDate(item.date)}</Text>
-              <Text style={styles.cell}>{item.category}</Text>
-              <Text style={styles.cell}>{item.description}</Text>
-              <Text style={styles.cell}>{item.customer}</Text>
-              <Text style={styles.cell}>${item.amount.toLocaleString()}</Text>
-              <View style={styles.actions}>
-                <TouchableOpacity>
-                  <Feather name="edit" size={16} color="#3b82f6" />
-                </TouchableOpacity>
-                <TouchableOpacity>
-                  <Feather name="trash-2" size={16} color="#ef4444" />
-                </TouchableOpacity>
+        {filteredIncome.length > 0 ? (
+          <FlatList
+            data={filteredIncome}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.tableRow}>
+                <Text style={styles.cell}>{item.category}</Text>
+                <Text style={styles.cell}>{item.description}</Text>
+                <Text style={styles.cell}>{item.customer}</Text>
+                <Text style={styles.cell}>${item.amount}</Text>
+                <Text style={styles.cell}>{formatDate(item.date)}</Text>
               </View>
-            </View>
-          )}
-          ListEmptyComponent={() => (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No income records found</Text>
-              <Text style={styles.emptySubText}>
-                Try adjusting your search or filters
-              </Text>
-            </View>
-          )}
-        />
+            )}
+            ListHeaderComponent={
+              <View style={styles.tableHeader}>
+                <Text style={styles.headerCell}>Category</Text>
+                <Text style={styles.headerCell}>Description</Text>
+                <Text style={styles.headerCell}>Customer</Text>
+                <Text style={styles.headerCell}>Amount</Text>
+                <Text style={styles.headerCell}>Date</Text>
+              </View>
+            }
+          />
+        ) : (
+          <View style={styles.emptyState}>
+            <Feather name="alert-triangle" size={24} color="#718096" />
+            <Text style={styles.emptyText}>No income records found</Text>
+            <Text style={styles.emptySubText}>Try adjusting your search or filters</Text>
+          </View>
+        )}
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 16 },
-  headerControls: { flexDirection: 'row', gap: 16, marginBottom: 16 },
-  searchContainer: { flex: 1, position: 'relative' },
-  searchIcon: { position: 'absolute', top: 12, left: 12 },
-  searchInput: {
-    padding: 12,
-    paddingLeft: 40,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 8,
+  container: { flex: 1, backgroundColor: '#fff', padding: 12 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  filterInput: {
-    padding: 12,
+  searchInput: {
+    flex: 1,
+    padding: 10,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    borderRadius: 8,
-    width: 150,
+    borderRadius: 6,
+    marginRight: 8,
+    fontSize: 14,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 8,
+  },
+  filterLabel: {
+    fontSize: 12,
+    color: '#718096',
+    marginRight: 6,
+  },
+  filterButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 4,
+  },
+  activeFilter: {
+    backgroundColor: '#10b981',
+    borderColor: '#10b981',
+  },
+  filterText: {
+    fontSize: 12,
+    color: '#718096',
   },
   addButton: {
     backgroundColor: '#10b981',
-    padding: 12,
-    borderRadius: 8,
+    padding: 8,
+    borderRadius: 6,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
-  addButtonText: { color: '#fff', fontWeight: '500' },
+  addButtonText: { color: '#fff', fontWeight: '500', fontSize: 14 },
   addForm: {
     backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 6,
+    padding: 12,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+    elevation: 1,
   },
   formTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#1a202c',
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  formGrid: { flexDirection: 'column', gap: 8 },
+  formGrid: { flexDirection: 'column', gap: 6 },
   input: {
-    padding: 12,
+    padding: 10,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    borderRadius: 8,
+    borderRadius: 6,
+    fontSize: 14,
   },
   buttonContainer: {
     flexDirection: 'row',
-    gap: 8,
-    marginTop: 12,
+    gap: 6,
+    marginTop: 8,
   },
   submitButton: {
     flex: 1,
     backgroundColor: '#10b981',
-    padding: 12,
-    borderRadius: 8,
+    padding: 8,
+    borderRadius: 6,
     alignItems: 'center',
   },
   cancelButton: {
     flex: 1,
     backgroundColor: '#d1d5db',
-    padding: 12,
-    borderRadius: 8,
+    padding: 8,
+    borderRadius: 6,
     alignItems: 'center',
   },
-  buttonText: { color: '#fff', fontWeight: '500' },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '500',
+    fontSize: 14,
+  },
   tableContainer: {
     backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: 6,
+    padding: 12,
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+    elevation: 1,
   },
-   tableRow: {
+  tableHeader: {
     flexDirection: 'row',
-    paddingVertical: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  headerCell: {
+    flex: 1,
+    fontSize: 10,
+    color: '#718096',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
     alignItems: 'center',
   },
   cell: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 12,
     color: '#1a202c',
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 8,
+    marginBottom: 4,
   },
   emptyState: {
-    padding: 48,
+    padding: 16,
     alignItems: 'center',
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#718096',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   emptySubText: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#9ca3af',
   },
 });

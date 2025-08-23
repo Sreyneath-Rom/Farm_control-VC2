@@ -8,7 +8,19 @@ import Report from '@/components/financial/Report';
 
 const Financial = () => {
   const { width } = useWindowDimensions();
-  const cardWidth = (width - 16 * 4) / 3; // Adjusted for 3 columns with 16px gap on each side
+
+  // Determine number of columns based on screen width
+  let cardWidth;
+  if (width < 480) {
+    // Small screens (e.g., phones in portrait)
+    cardWidth = width - 32; // Full width with padding
+  } else if (width < 768) {
+    // Medium screens (e.g., tablets in portrait or larger phones)
+    cardWidth = (width - 16 * 2) / 2; // 2 columns
+  } else {
+    // Large screens (e.g., tablets in landscape)
+    cardWidth = (width - 16 * 4) / 3; // 3 columns
+  }
 
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -17,7 +29,7 @@ const Financial = () => {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
-  }) + ' (+07)'; // Updated to Friday, August 22, 2025, 08:12 AM +07
+  }) + ' (+07)'; // Updated to Saturday, August 23, 2025, 08:07 AM +07
 
   const [activeSection, setActiveSection] = useState('overview');
 
@@ -126,13 +138,15 @@ const styles = StyleSheet.create({
   },
   navTabs: {
     flexDirection: 'row',
-    gap: 16,
+    flexWrap: 'wrap', // Allow wrapping for small screens
+    gap: 8,
     marginBottom: 24,
   },
   navTab: {
     fontSize: 16,
     color: '#718096',
     paddingBottom: 4,
+    paddingHorizontal: 8, // Add padding for better touch targets
   },
   activeTab: {
     color: '#10b981',
@@ -155,6 +169,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 2,
+    marginBottom: 16, // Add spacing between cards on small screens
   },
   cardTitle: {
     fontSize: 14,
