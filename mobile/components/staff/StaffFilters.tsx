@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet, Dimensions } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
 interface StaffFiltersProps {
@@ -10,19 +10,21 @@ interface StaffFiltersProps {
 }
 
 const StaffFilters: React.FC<StaffFiltersProps> = ({ onSearch, onDepartmentFilter, onStatusFilter }) => {
+  const { width } = Dimensions.get('window');
+
   return (
     <View style={styles.container}>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { width: width * 0.9 }]}
         placeholder="Search by name, role, or department..."
         onChangeText={onSearch}
       />
-      <Picker style={styles.picker} onValueChange={onDepartmentFilter} selectedValue="All Departments">
+      <Picker style={[styles.picker, { width: width * 0.9 }]} onValueChange={onDepartmentFilter} selectedValue="All Departments">
         <Picker.Item label="All Departments" value="All Departments" />
         <Picker.Item label="Admin" value="Admin" />
         <Picker.Item label="Management" value="Management" />
       </Picker>
-      <Picker style={styles.picker} onValueChange={onStatusFilter} selectedValue="All Status">
+      <Picker style={[styles.picker, { width: width * 0.9 }]} onValueChange={onStatusFilter} selectedValue="All Status">
         <Picker.Item label="All Status" value="All Status" />
         <Picker.Item label="Active" value="active" />
         <Picker.Item label="Inactive" value="inactive" />
@@ -33,7 +35,8 @@ const StaffFilters: React.FC<StaffFiltersProps> = ({ onSearch, onDepartmentFilte
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 10,
+    marginBottom: 15,
+    alignItems: 'center',
   },
   input: {
     borderWidth: 1,
@@ -41,10 +44,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginBottom: 10,
+    fontSize: 16,
   },
   picker: {
     height: 50,
-    width: '100%',
     marginBottom: 10,
   },
 });

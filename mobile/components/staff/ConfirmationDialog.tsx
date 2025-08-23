@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Dimensions } from 'react-native';
 
 interface ConfirmationDialogProps {
   isOpen: boolean;
@@ -10,10 +10,12 @@ interface ConfirmationDialogProps {
 }
 
 const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ isOpen, onConfirm, onCancel, message }) => {
+  const { width } = Dimensions.get('window');
+
   return (
     <Modal transparent visible={isOpen} animationType="fade">
       <View style={styles.modalBackground}>
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, { width: width * 0.8 }]}>
           <Text style={styles.message}>{message}</Text>
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
@@ -45,6 +47,7 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 16,
     marginBottom: 20,
+    textAlign: 'center',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -53,18 +56,23 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: '#ef4444',
-    padding: 10,
+    padding: 12,
     borderRadius: 5,
+    flex: 1,
     marginRight: 10,
+    minWidth: 100,
   },
   confirmButton: {
     backgroundColor: '#22c55e',
-    padding: 10,
+    padding: 12,
     borderRadius: 5,
+    flex: 1,
+    minWidth: 100,
   },
   buttonText: {
     color: 'white',
     textAlign: 'center',
+    fontSize: 16,
   },
 });
 

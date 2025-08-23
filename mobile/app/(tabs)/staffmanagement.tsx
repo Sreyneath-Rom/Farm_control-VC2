@@ -1,19 +1,19 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions } from 'react-native';
 import ConfirmationDialog from '@/components/staff/ConfirmationDialog';
 import StaffCard from '@/components/staff/StaffCard';
 import StaffFormModal from '@/components/staff/StaffFormModal';
 import StaffFilters from '@/components/staff/StaffFilters';
 import { Staff } from '@/components/staff/StaffCard';
-import { StaffFormData } from '@/components/staff/StaffFormModal'; // Import StaffFormData
 
 const StaffManagement: React.FC = () => {
+  const { width, height } = Dimensions.get('window');
   const [staffList, setStaffList] = useState<Staff[]>([
-    { name: 'ya', email: 'ya@mallinator.com', phone: '0123456871', role: 'Administration', status: 'inactive', started: '2022-10-07', department: undefined },
-    { name: 'mealea', email: 'rexeqefis@mallinator.com', phone: '087654345', role: 'Management', status: 'active', started: '2024-12-29', department: undefined },
-    { name: 'Aiko McCarthy', email: 'guzited@mallinator.com', phone: '+781 934-8385', role: 'Administration', status: 'inactive', started: '2004-05-03', department: undefined },
-    { name: 'ya manager', email: 'yayaaa@gmail.com', phone: '23456789', role: 'Health', status: 'active', started: '2025-08-23', department: undefined },
+    { id: '1', name: 'ya', email: 'ya@mallinator.com', phone: '0123456871', role: 'Administration', status: 'inactive', started: '2022-10-07' },
+    { id: '2', name: 'mealea', email: 'rexeqefis@mallinator.com', phone: '087654345', role: 'Management', status: 'active', started: '2024-12-29' },
+    { id: '3', name: 'Aiko McCarthy', email: 'guzited@mallinator.com', phone: '+781 934-8385', role: 'Administration', status: 'inactive', started: '2004-05-03' },
+    { id: '4', name: 'ya manager', email: 'yayaaa@gmail.com', phone: '23456789', role: 'Health', status: 'active', started: '2025-08-23' },
   ]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -24,9 +24,9 @@ const StaffManagement: React.FC = () => {
 
   const handleSaveStaff = (data: Staff) => {
     if (selectedStaff) {
-      setStaffList(staffList.map(staff => staff === selectedStaff ? data : staff));
+      setStaffList(staffList.map(staff => staff.id === selectedStaff.id ? data : staff));
     } else {
-      setStaffList([...staffList, data]);
+      setStaffList([...staffList, { ...data, id: Date.now().toString() }]);
     }
     setIsFormOpen(false);
     setSelectedStaff(null);
@@ -44,30 +44,35 @@ const StaffManagement: React.FC = () => {
 
   const handleConfirmDelete = () => {
     if (selectedStaff) {
-      setStaffList(staffList.filter(staff => staff !== selectedStaff));
+      setStaffList(staffList.filter(staff => staff.id !== selectedStaff.id));
     }
     setIsConfirmOpen(false);
     setSelectedStaff(null);
   };
 
-  const handleFilter = (query: string, dept: string, status: string) => {
-    setFilters({ search: query, department: dept, status: status });
+  const handleFilter = (query: string, dept?: string, status?: string) => {
+    setFilters(prev => ({
+      ...prev,
+      search: query,
+      department: dept || prev.department,
+      status: status || prev.status,
+    }));
   };
 
   const filteredStaff = staffList.filter(staff =>
-    staff.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-    staff.role.toLowerCase().includes(filters.search.toLowerCase()) ||
+    (staff.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+     staff.role.toLowerCase().includes(filters.search.toLowerCase())) &&
     (filters.department === 'All Departments' || staff.department === filters.department) &&
     (filters.status === 'All Status' || staff.status === filters.status)
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { padding: width * 0.03 }]}>
       <Text style={styles.title}>Staff Management</Text>
       <Text style={styles.subtitle}>Manage your farm staff information and roles</Text>
       <StaffFilters
-        onSearch={(q) => handleFilter(q, filters.department, filters.status)}
-        onDepartmentFilter={(d) => handleFilter(filters.search, d, filters.status)}
+        onSearch={(q) => handleFilter(q)}
+        onDepartmentFilter={(d) => handleFilter(filters.search, d)}
         onStatusFilter={(s) => handleFilter(filters.search, filters.department, s)}
       />
       <TouchableOpacity style={styles.addButton} onPress={handleAddStaff}>
@@ -83,13 +88,14 @@ const StaffManagement: React.FC = () => {
             onDelete={() => handleDeleteStaff(item)}
           />
         )}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item.id || ''}
+        contentContainerStyle={{ paddingBottom: 20 }}
       />
       <StaffFormModal
         isOpen={isFormOpen}
         onClose={() => { setIsFormOpen(false); setSelectedStaff(null); }}
         onSave={handleSaveStaff}
-        initialData={selectedStaff as StaffFormData | undefined}
+        initialData={selectedStaff}
       />
       <ConfirmationDialog
         isOpen={isConfirmOpen}
@@ -104,27 +110,30 @@ const StaffManagement: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 5,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
     color: '#6b7280',
-    marginBottom: 10,
+    marginBottom: 15,
+    textAlign: 'center',
   },
   addButton: {
     backgroundColor: '#22c55e',
-    padding: 10,
+    paddingVertical: 12,
     borderRadius: 5,
-    marginBottom: 10,
+    marginBottom: 15,
+    alignItems: 'center',
   },
   addButtonText: {
     color: 'white',
-    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
