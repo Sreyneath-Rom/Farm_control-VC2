@@ -4,15 +4,16 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  FlatList,
   useWindowDimensions,
-  Alert,
   ScrollView,
+  SafeAreaView,
+  Alert,
+  FlatList,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Feather from 'react-native-vector-icons/Feather';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import styles from '@/assets/Expense.styles';
 
 type ExpenseItem = {
   id: number;
@@ -23,139 +24,87 @@ type ExpenseItem = {
   date: string;
 };
 
+const categories = ['Feed', 'Equipment', 'Labor', 'Other'];
+
 const Expense = () => {
   const { width } = useWindowDimensions();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [timeFilter, setTimeFilter] = useState('this-month');
-  const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
-  const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
-  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
-  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
-  const [showFormDatePicker, setShowFormDatePicker] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<ExpenseItem | null>(null);
   const [newExpense, setNewExpense] = useState<Partial<Omit<ExpenseItem, 'amount'> & { amount: number | string }>>({
     category: '',
     description: '',
     supplier: '',
-    amount: 0,
+    amount: '',
     date: '',
   });
-  const [selectedExpense, setSelectedExpense] = useState<ExpenseItem | null>(null);
+
   const [expenseHistory, setExpenseHistory] = useState<ExpenseItem[]>([
     { id: 1, category: 'Feed', description: 'Purchase of pig feed', supplier: 'Farm Supply Co.', amount: 5000, date: '2024-01-15' },
     { id: 2, category: 'Equipment', description: 'New tractor repair', supplier: 'Machinery Inc.', amount: 3000, date: '2024-01-13' },
   ]);
 
-  const categories = ['Feed', 'Equipment', 'Labor', 'Other'];
-
-  const getDynamicStyles = () => ({
-    container: { flex: 1, backgroundColor: '#fff', padding: width < 480 ? 8 : 16 },
-    header: { flexDirection: 'row' as const, justifyContent: 'space-between' as const, alignItems: 'center' as const, marginBottom: width < 480 ? 8 : 12 },
-    searchInput: { padding: width < 480 ? 6 : 12, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, flex: 1, marginRight: width < 480 ? 4 : 8 },
-    filterContainer: { flexDirection: 'row' as const, alignItems: 'center' as const, marginBottom: width < 480 ? 8 : 12 },
-    filterText: { fontSize: width < 480 ? 12 : 14, color: '#718096', marginRight: width < 480 ? 4 : 8 },
-    picker: { height: 50, width: width < 480 ? 120 : 150 },
-    addButton: { backgroundColor: '#10b981', padding: width < 480 ? 6 : 12, borderRadius: 8, flexDirection: 'row' as const, alignItems: 'center' as const, gap: width < 480 ? 4 : 8 },
-    buttonText: { color: '#fff', fontWeight: '500' as const, fontSize: width < 480 ? 12 : 14 },
-    modalOverlay: { flex: 1, justifyContent: 'center' as const, alignItems: 'center' as const, backgroundColor: 'rgba(0,0,0,0.5)' },
-    modalContent: { backgroundColor: '#fff', borderRadius: 8, padding: width < 480 ? 8 : 16, width: '80%' as const },
-    modalTitle: { fontSize: width < 480 ? 14 : 16, fontWeight: '600' as const, color: '#1a202c', marginBottom: width < 480 ? 6 : 12 },
-    formGrid: { flexDirection: 'column' as const, gap: width < 480 ? 4 : 8 },
-    input: { padding: width < 480 ? 6 : 12, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8 },
-    dateInput: { padding: width < 480 ? 6 : 12, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, color: '#000' },
-    buttonContainer: { flexDirection: 'row' as const, gap: width < 480 ? 4 : 8, marginTop: width < 480 ? 6 : 12 },
-    submitButton: { flex: 1, backgroundColor: '#10b981', padding: width < 480 ? 6 : 12, borderRadius: 8, alignItems: 'center' as const },
-    cancelButton: { flex: 1, backgroundColor: '#d1d5db', padding: width < 480 ? 6 : 12, borderRadius: 8, alignItems: 'center' as const },
-    tableContainer: { marginTop: width < 480 ? 8 : 16 },
-    tableHeader: { flexDirection: 'row' as const, backgroundColor: '#f7fafc', padding: width < 480 ? 6 : 12, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
-    headerCell: { flex: 1, fontWeight: '600' as const, fontSize: width < 480 ? 12 : 14, color: '#1a202c', textAlign: 'center' as const },
-    tableRow: { flexDirection: 'row' as const, padding: width < 480 ? 6 : 12, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
-    cell: { flex: 1, fontSize: width < 480 ? 12 : 14, color: '#4a5568', textAlign: 'center' as const },
-    actionCell: { flexDirection: 'row' as const, gap: width < 480 ? 4 : 8, justifyContent: 'center' as const },
-    actionText: { fontSize: width < 480 ? 12 : 14, color: '#10b981', fontWeight: '500' as const },
-    emptyState: { padding: width < 480 ? 16 : 48, alignItems: 'center' as const },
-    emptyText: { fontSize: width < 480 ? 14 : 16, color: '#718096', marginBottom: width < 480 ? 4 : 8 },
-    emptySubText: { fontSize: width < 480 ? 10 : 12, color: '#9ca3af' },
-  });
-
+  // Add Expense
   const addExpense = () => {
     if (!newExpense.category || !newExpense.description || !newExpense.supplier || !newExpense.amount || !newExpense.date) {
-      Alert.alert('Error', 'All fields are required');
+      Alert.alert('Error', 'Please fill all fields');
       return;
     }
-    const id = expenseHistory.length + 1;
-    setExpenseHistory([...expenseHistory, { id, ...newExpense, amount: Number(newExpense.amount), date: newExpense.date!.toString().split('T')[0] } as ExpenseItem]);
+    const newId = expenseHistory.length ? expenseHistory[expenseHistory.length - 1].id + 1 : 1;
+    setExpenseHistory([...expenseHistory, { ...newExpense, amount: Number(newExpense.amount), id: newId } as ExpenseItem]);
     setNewExpense({ category: '', description: '', supplier: '', amount: '', date: '' });
     setShowAddForm(false);
   };
 
+  // Edit Expense
   const editExpense = () => {
-    if (!selectedExpense || !newExpense.category || !newExpense.description || !newExpense.supplier || !newExpense.amount || !newExpense.date) {
-      Alert.alert('Error', 'All fields are required');
-      return;
-    }
-    setExpenseHistory(expenseHistory.map(item => item.id === selectedExpense.id ? { ...item, ...newExpense, amount: Number(newExpense.amount), date: newExpense.date!.toString().split('T')[0] } as ExpenseItem : item));
-    setNewExpense({ category: '', description: '', supplier: '', amount: '', date: '' });
+    if (!selectedExpense) return;
+    setExpenseHistory(expenseHistory.map(exp => (exp.id === selectedExpense.id ? { ...selectedExpense } : exp)));
     setSelectedExpense(null);
     setShowEditForm(false);
   };
 
+  // Delete Expense
   const deleteExpense = (id: number) => {
-    Alert.alert('Confirm', 'Are you sure you want to delete this expense?', [
+    Alert.alert('Confirm Delete', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'OK', onPress: () => setExpenseHistory(expenseHistory.filter(item => item.id !== id)) },
+      { text: 'Delete', style: 'destructive', onPress: () => setExpenseHistory(expenseHistory.filter(e => e.id !== id)) },
     ]);
   };
 
-  const filteredExpenses = expenseHistory.filter(item =>
-    item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.supplier.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const minTableWidth = 600;
+
+  const filteredExpenses = expenseHistory.filter(e => e.description.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const renderItem = ({ item }: { item: ExpenseItem }) => (
-    <View style={getDynamicStyles().tableRow}>
-      <Text style={getDynamicStyles().cell}>{item.category}</Text>
-      <Text style={getDynamicStyles().cell}>{item.description}</Text>
-      <Text style={getDynamicStyles().cell}>{item.supplier}</Text>
-      <Text style={getDynamicStyles().cell}>${item.amount.toFixed(2)}</Text>
-      <Text style={getDynamicStyles().cell}>{item.date}</Text>
-      <View style={getDynamicStyles().actionCell}>
-        <TouchableOpacity onPress={() => { setSelectedExpense(item); setNewExpense(item); setShowEditForm(true); }}>
-          <Text style={getDynamicStyles().actionText}>Edit</Text>
+    <View style={styles.tableRow}>
+      <Text style={styles.cell}>{item.category}</Text>
+      <Text style={styles.cell}>{item.description}</Text>
+      <Text style={styles.cell}>{item.supplier}</Text>
+      <Text style={styles.cell}>{item.amount}</Text>
+      <Text style={styles.cell}>{item.date}</Text>
+      <View style={styles.actionCell}>
+        <TouchableOpacity
+          onPress={() => {
+            setSelectedExpense(item);
+            setShowEditForm(true);
+          }}
+        >
+          <Text style={styles.actionText}>Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => deleteExpense(item.id)}>
-          <Text style={[getDynamicStyles().actionText, { color: '#ef4444' }]}>Delete</Text>
+          <Text style={[styles.actionText, { color: 'red' }]}>Delete</Text>
         </TouchableOpacity>
       </View>
-    </View>
-  );
-
-  const styles = getDynamicStyles();
-  const minTableWidth = 600;
-  const tableContent = (
-    <View>
-      <View style={styles.tableHeader}>
-        <Text style={styles.headerCell}>Category</Text>
-        <Text style={styles.headerCell}>Description</Text>
-        <Text style={styles.headerCell}>Supplier</Text>
-        <Text style={styles.headerCell}>Amount</Text>
-        <Text style={styles.headerCell}>Date</Text>
-        <Text style={styles.headerCell}>Actions</Text>
-      </View>
-      <FlatList
-        data={filteredExpenses}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
-        ListEmptyComponent={<View style={styles.emptyState}><Text style={styles.emptyText}>No expenses found</Text><Text style={styles.emptySubText}>Try adjusting your search or filters</Text></View>}
-        contentContainerStyle={{ paddingBottom: width < 480 ? 16 : 24 }}
-      />
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <TextInput
           style={styles.searchInput}
@@ -164,139 +113,83 @@ const Expense = () => {
           onChangeText={setSearchQuery}
         />
         <TouchableOpacity style={styles.addButton} onPress={() => setShowAddForm(true)}>
-          <Feather name="plus" size={width < 480 ? 18 : 24} color="#fff" />
+          <Feather name="plus" size={18} color="#fff" />
           <Text style={styles.buttonText}>Add Expense</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Filter */}
       <View style={styles.filterContainer}>
         <Text style={styles.filterText}>Filter by:</Text>
-        <Picker
-          selectedValue={timeFilter}
-          onValueChange={(itemValue) => setTimeFilter(itemValue as string)}
-          style={styles.picker}
-        >
+        <Picker selectedValue={timeFilter} onValueChange={(val) => setTimeFilter(val as string)} style={styles.picker}>
           <Picker.Item label="This Month" value="this-month" />
           <Picker.Item label="Last Month" value="last-month" />
           <Picker.Item label="Custom" value="custom" />
         </Picker>
       </View>
-      {timeFilter === 'custom' && (
-        <View style={{ flexDirection: 'row' as const, gap: width < 480 ? 4 : 8, marginBottom: width < 480 ? 8 : 12 }}>
-          <TouchableOpacity onPress={() => setShowStartDatePicker(true)}>
-            <TextInput
-              style={styles.dateInput}
-              placeholder="Start Date"
-              value={customStartDate ? customStartDate.toISOString().split('T')[0] : ''}
-              editable={false}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setShowEndDatePicker(true)}>
-            <TextInput
-              style={styles.dateInput}
-              placeholder="End Date"
-              value={customEndDate ? customEndDate.toISOString().split('T')[0] : ''}
-              editable={false}
-            />
-          </TouchableOpacity>
+
+      {/* Table */}
+      <View style={styles.tableContainer}>
+        <View style={width < minTableWidth ? { width: minTableWidth } : undefined}>
+          <View style={styles.tableHeader}>
+            <Text style={styles.headerCell}>Category</Text>
+            <Text style={styles.headerCell}>Description</Text>
+            <Text style={styles.headerCell}>Supplier</Text>
+            <Text style={styles.headerCell}>Amount</Text>
+            <Text style={styles.headerCell}>Date</Text>
+            <Text style={styles.headerCell}>Actions</Text>
+          </View>
+          {filteredExpenses.length ? (
+            <FlatList data={filteredExpenses} renderItem={renderItem} keyExtractor={(item) => item.id.toString()} />
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No expenses found</Text>
+              <Text style={styles.emptySubText}>Try adding a new expense or changing the filter.</Text>
+            </View>
+          )}
         </View>
-      )}
-      {showStartDatePicker && (
-        <DateTimePicker
-          value={customStartDate || new Date()}
-          mode="date"
-          display="default"
-          onChange={(event, selectedDate) => {
-            setShowStartDatePicker(false);
-            setCustomStartDate(selectedDate || null);
-          }}
-        />
-      )}
-      {showEndDatePicker && (
-        <DateTimePicker
-          value={customEndDate || new Date()}
-          mode="date"
-          display="default"
-          onChange={(event, selectedDate) => {
-            setShowEndDatePicker(false);
-            setCustomEndDate(selectedDate || null);
-          }}
-        />
-      )}
+      </View>
+
+      {/* Add/Edit Modal */}
       {(showAddForm || showEditForm) && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{showEditForm ? 'Edit Expense' : 'Add New Expense'}</Text>
-            <View style={styles.formGrid}>
-              <Picker
-                selectedValue={newExpense.category}
-                onValueChange={(itemValue) => setNewExpense({ ...newExpense, category: itemValue as string })}
-                style={styles.picker}
-              >
-                <Picker.Item label="Select Category" value="" />
-                {categories.map((cat) => <Picker.Item key={cat} label={cat} value={cat} />)}
-              </Picker>
-              <TextInput
-                style={styles.input}
-                placeholder="Description"
-                value={newExpense.description}
-                onChangeText={(text) => setNewExpense({ ...newExpense, description: text })}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Supplier"
-                value={newExpense.supplier}
-                onChangeText={(text) => setNewExpense({ ...newExpense, supplier: text })}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Amount"
-                value={newExpense.amount !== undefined ? String(newExpense.amount) : ''}
-                keyboardType="numeric"
-                onChangeText={(text) => setNewExpense({ ...newExpense, amount: text })}
-              />
-              <TouchableOpacity onPress={() => setShowFormDatePicker(true)}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalTitle}>{showEditForm ? 'Edit Expense' : 'Add Expense'}</Text>
+              {['category', 'description', 'supplier', 'amount', 'date'].map((field) => (
                 <TextInput
-                  style={styles.dateInput}
-                  placeholder="Date"
-                  value={newExpense.date ? newExpense.date.toString().split('T')[0] : ''}
-                  editable={false}
+                  key={field}
+                  style={styles.input}
+                  placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                  value={(showEditForm && selectedExpense ? (selectedExpense as any)[field] : (newExpense as any)[field])?.toString() || ''}
+                  onChangeText={(val) => {
+                    if (showEditForm && selectedExpense) setSelectedExpense({ ...selectedExpense, [field]: field === 'amount' ? Number(val) : val });
+                    else setNewExpense({ ...newExpense, [field]: field === 'amount' ? Number(val) : val });
+                  }}
                 />
-              </TouchableOpacity>
-            </View>
-            {showFormDatePicker && (
-              <DateTimePicker
-                value={typeof newExpense.date === 'string' ? new Date(newExpense.date) : (newExpense.date || new Date())}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowFormDatePicker(false);
-                  setNewExpense({ ...newExpense, date: selectedDate ? selectedDate.toISOString().split('T')[0] : '' });
-                }}
-              />
-            )}
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity style={styles.submitButton} onPress={showEditForm ? editExpense : addExpense}>
-                <Text style={styles.buttonText}>{showEditForm ? 'Update' : 'Submit'}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.cancelButton} onPress={() => { setShowAddForm(false); setShowEditForm(false); setNewExpense({ category: '', description: '', supplier: '', amount: '', date: '' }); }}>
-                <Text style={styles.buttonText}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
+              ))}
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.submitButton}
+                  onPress={showEditForm ? editExpense : addExpense}
+                >
+                  <Text style={styles.buttonText}>{showEditForm ? 'Save' : 'Add'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => {
+                    setShowAddForm(false);
+                    setShowEditForm(false);
+                  }}
+                >
+                  <Text>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </View>
         </View>
       )}
-      <View style={styles.tableContainer}>
-        {width < minTableWidth ? (
-          <ScrollView horizontal={true}>
-            <View style={{ width: minTableWidth }}>
-              {tableContent}
-            </View>
-          </ScrollView>
-        ) : (
-          tableContent
-        )}
-      </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

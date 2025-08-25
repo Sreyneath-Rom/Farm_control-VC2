@@ -1,6 +1,9 @@
-// app/(tabs)/dashboard/index.tsx
 import React from "react";
-import { ScrollView, View, StyleSheet, useWindowDimensions } from "react-native";
+import { ScrollView, StyleSheet, useWindowDimensions } from "react-native";
+import { ThemedView } from "@/components/ThemedView";
+import { ThemedText } from "@/components/ThemedText";
+import { useColorScheme } from "@/hooks/useColorScheme";
+import { Colors } from "@/constants/Colors";
 
 import StatsCard from "@/components/dashboard/StatsCard";
 import RecentActivities from "@/components/dashboard/RecentActivities";
@@ -8,118 +11,159 @@ import LowStockAlerts from "@/components/dashboard/LowStockAlerts";
 
 export default function Dashboard() {
   const { width } = useWindowDimensions();
+  const colorScheme = useColorScheme();
 
-  // 2 cards per row with safe minWidth
-  const cardWidth = Math.max((width - 16 * 3) / 2, 160);
+  // Calculate card width for responsive grid (2 cards per row, min 180px)
+  const cardWidth = Math.max((width - 16 * 3) / 2, 180);
+
+  // Dynamic date for header, consistent with financial.tsx
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  }) + " (+07)";
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* === Top Stats Section === */}
-      <View style={styles.grid}>
-        <StatsCard
-          style={{ width: cardWidth }}
-          title="Staff Management"
-          value="24"
-          change="+2 this month"
-          icon="group"
-          bgColor="#214cdaff"
-          textColor="#fff"
-        />
-        <StatsCard
-          style={{ width: cardWidth }}
-          title="Salary Management"
-          value="$12,450"
-          change="+5.2% from last month"
-          icon="monetization-on"
-          bgColor="#dca009ff"
-          textColor="#fff"
-        />
-        <StatsCard
-          style={{ width: cardWidth }}
-          title="Inventory"
-          value="156"
-          change="12 low stock alerts"
-          icon="inventory-2"
-          bgColor="#00b51eff"
-          textColor="#fff"
-        />
-        <StatsCard
-          style={{ width: cardWidth }}
-          title="Financial"
-          value="$18,750"
-          change="+8.1% from last month"
-          icon="account-balance-wallet"
-          bgColor="#9333ea"
-          textColor="#fff"
-        />
-      </View>
+    <ThemedView
+      style={[
+        styles.container,
+        { backgroundColor: Colors[colorScheme ?? "light"].background },
+      ]}
+    >
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <ThemedView style={styles.header}>
+          <ThemedText type="title">Dashboard</ThemedText>
+          <ThemedText type="subtitle">
+            Overview of your farm metrics as of {currentDate}
+          </ThemedText>
+        </ThemedView>
 
-      {/* === Bottom Stats Section === */}
-      <View style={styles.grid}>
-        <StatsCard
-          style={{ width: cardWidth }}
-          title="Salaries Paid"
-          value="$0.00"
-          desc="Total lifetime payments"
-          icon="monetization-on"
-          bgColor="#fff"
-          textColor="#00b51eff"
-        />
-        <StatsCard
-          style={{ width: cardWidth }}
-          title="Active Borrows"
-          value="0"
-          desc="Materials borrowed by staff"
-          icon="archive"
-          bgColor="#fff"
-          textColor="#6b21a8"
-        />
-        <StatsCard
-          style={{ width: cardWidth }}
-          title="Maintenance Costs"
-          value="$0.00"
-          desc="Equipment maintenance expenses"
-          icon="settings"
-          bgColor="#fff"
-          textColor="#c2410c"
-        />
-      </View>
+        {/* Key Metrics Section */}
+        <ThemedText type="subtitle" style={styles.sectionTitle}>
+          Key Metrics
+        </ThemedText>
+        <ThemedView style={styles.grid}>
+          <StatsCard
+            style={{ width: cardWidth, marginHorizontal: 8, marginBottom: 16 }}
+            title="Staff Management"
+            value="4" // Synced with staffmanagement.tsx
+            change="+2 this month"
+            icon="group"
+            bgColor={Colors[colorScheme ?? "light"].staffCardBg}
+            textColor={Colors[colorScheme ?? "light"].text}
+          />
+          <StatsCard
+            style={{ width: cardWidth, marginHorizontal: 8, marginBottom: 16 }}
+            title="Salary Management"
+            value="$12,450" // Placeholder, replace with dynamic data
+            change="+5.2% from last month"
+            icon="monetization-on"
+            bgColor={Colors[colorScheme ?? "light"].salaryCardBg}
+            textColor={Colors[colorScheme ?? "light"].text}
+          />
+          <StatsCard
+            style={{ width: cardWidth, marginHorizontal: 8, marginBottom: 16 }}
+            title="Inventory"
+            value="156" // Placeholder, replace with dynamic data
+            change="12 low stock alerts"
+            icon="inventory-2"
+            bgColor={Colors[colorScheme ?? "light"].inventoryCardBg}
+            textColor={Colors[colorScheme ?? "light"].text}
+          />
+          <StatsCard
+            style={{ width: cardWidth, marginHorizontal: 8, marginBottom: 16 }}
+            title="Financial"
+            value="$30,310" // Synced with financial.tsx net profit
+            change="+8.1% from last month"
+            icon="account-balance-wallet"
+            bgColor={Colors[colorScheme ?? "light"].financialCardBg}
+            textColor={Colors[colorScheme ?? "light"].text}
+          />
+        </ThemedView>
 
-      {/* === Recent Activities & Low Stock Alerts Section === */}
-      <View style={styles.row}>
-        <View style={[styles.column, { flex: 1 }]}>
-          <RecentActivities />
-        </View>
-        <View style={[styles.column, { flex: 1 }]}>
-          <LowStockAlerts />
-        </View>
-      </View>
-    </ScrollView>
+        {/* Additional Metrics Section */}
+        <ThemedText type="subtitle" style={styles.sectionTitle}>
+          Additional Metrics
+        </ThemedText>
+        <ThemedView style={styles.grid}>
+          <StatsCard
+            style={{ width: cardWidth, marginHorizontal: 8, marginBottom: 16 }}
+            title="Salaries Paid"
+            value="$0.00" // Placeholder, replace with dynamic data
+            desc="Total lifetime payments"
+            icon="monetization-on"
+            bgColor={Colors[colorScheme ?? "light"].cardBg}
+            textColor={Colors[colorScheme ?? "light"].salaryCardText}
+          />
+          <StatsCard
+            style={{ width: cardWidth, marginHorizontal: 8, marginBottom: 16 }}
+            title="Active Borrows"
+            value="0" // Placeholder, replace with dynamic data
+            desc="Materials borrowed by staff"
+            icon="archive"
+            bgColor={Colors[colorScheme ?? "light"].cardBg}
+            textColor={Colors[colorScheme ?? "light"].borrowCardText}
+          />
+          <StatsCard
+            style={{ width: cardWidth, marginHorizontal: 8, marginBottom: 16 }}
+            title="Maintenance Costs"
+            value="$0.00" // Placeholder, replace with dynamic data
+            desc="Equipment maintenance expenses"
+            icon="settings"
+            bgColor={Colors[colorScheme ?? "light"].cardBg}
+            textColor={Colors[colorScheme ?? "light"].maintenanceCardText}
+          />
+        </ThemedView>
+
+        {/* Activity & Alerts Section */}
+        <ThemedText type="subtitle" style={styles.sectionTitle}>
+          Activity & Alerts
+        </ThemedText>
+        <ThemedView style={styles.row}>
+          <ThemedView style={[styles.column, { flex: 1, marginHorizontal: 8 }]}>
+            <RecentActivities />
+          </ThemedView>
+          <ThemedView style={[styles.column, { flex: 1, marginHorizontal: 8 }]}>
+            <LowStockAlerts />
+          </ThemedView>
+        </ThemedView>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f3f4f6",
     padding: 16,
+  },
+  header: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    marginVertical: 16,
+    fontWeight: "600",
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
     marginBottom: 16,
-    marginTop: 16,
-    gap: 16,
+    marginHorizontal: -8, // Negative margin to counteract item margins
   },
   row: {
     flexDirection: "row",
     flexWrap: "wrap",
     marginBottom: 16,
+    marginHorizontal: -8,
   },
   column: {
     flex: 1,
     minWidth: 300,
+    marginHorizontal: 8, // Fallback for gap
   },
 });
-  

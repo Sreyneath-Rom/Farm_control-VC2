@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Modal, Dimensions, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Modal, Dimensions, Alert, StyleSheet, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Feather from 'react-native-vector-icons/Feather';
 import { Staff } from '@/components/staff/StaffCard';
-import { colors, commonStyles, typography } from '@/assets/styles';
+import { colors, typography } from '@/assets/styles';
 
 interface StaffFormModalProps {
   isOpen: boolean;
@@ -13,8 +13,10 @@ interface StaffFormModalProps {
   initialData?: Staff | null;
 }
 
+const { width, height } = Dimensions.get('window');
+const scale = (size: number) => size * (width / 375);
+
 const StaffFormModal: React.FC<StaffFormModalProps> = ({ isOpen, onClose, onSave, initialData }) => {
-  const { width, height } = Dimensions.get('window');
   const [formData, setFormData] = useState<Staff>(initialData || {
     id: '',
     name: '',
@@ -26,6 +28,10 @@ const StaffFormModal: React.FC<StaffFormModalProps> = ({ isOpen, onClose, onSave
     department: undefined,
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  useEffect(() => {
+    if (initialData) setFormData(initialData);
+  }, [initialData]);
 
   const handleSubmit = () => {
     if (!formData.name || !formData.email || !formData.phone || !formData.role || !formData.started) {
@@ -46,99 +52,92 @@ const StaffFormModal: React.FC<StaffFormModalProps> = ({ isOpen, onClose, onSave
 
   return (
     <Modal transparent visible={isOpen} animationType="fade">
-      <View style={commonStyles.modalOverlay}>
-        <View style={[commonStyles.modalContent, { width: width * 0.9, maxHeight: height * 0.8 }]}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <Text style={{ ...typography.title, fontWeight: 'bold' }}>{initialData ? 'Edit Staff' : 'Add Staff'}</Text>
+      <View style={styles.modalOverlay}>
+        <View style={[styles.modalContainer, { maxHeight: height * 0.85 }]}>
+          <View style={styles.header}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.textPrimary }}>Title</Text>
             <TouchableOpacity onPress={onClose} accessibilityLabel="Close modal" accessibilityRole="button">
-              <Feather name="x" size={24} color={colors.textPrimary} />
+              <Feather name="x" size={scale(22)} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
-          <TextInput
-            style={commonStyles.input}
-            placeholder="Name"
-            value={formData.name}
-            onChangeText={(text) => setFormData({ ...formData, name: text })}
-            accessibilityLabel="Staff name"
-          />
-          <TextInput
-            style={commonStyles.input}
-            placeholder="Email"
-            value={formData.email}
-            onChangeText={(text) => setFormData({ ...formData, email: text })}
-            keyboardType="email-address"
-            accessibilityLabel="Staff email"
-          />
-          <TextInput
-            style={commonStyles.input}
-            placeholder="Phone"
-            value={formData.phone}
-            onChangeText={(text) => setFormData({ ...formData, phone: text })}
-            keyboardType="phone-pad"
-            accessibilityLabel="Staff phone"
-          />
-          <TextInput
-            style={commonStyles.input}
-            placeholder="Role"
-            value={formData.role}
-            onChangeText={(text) => setFormData({ ...formData, role: text })}
-            accessibilityLabel="Staff role"
-          />
-          <Picker
-            style={commonStyles.picker}
-            selectedValue={formData.status}
-            onValueChange={(itemValue) => setFormData({ ...formData, status: itemValue as 'active' | 'inactive' })}
-            accessibilityLabel="Staff status"
-          >
-            <Picker.Item label="Active" value="active" />
-            <Picker.Item label="Inactive" value="inactive" />
-          </Picker>
-          <Picker
-            style={commonStyles.picker}
-            selectedValue={formData.department || 'None'}
-            onValueChange={(itemValue) => setFormData({ ...formData, department: itemValue === 'None' ? undefined : itemValue })}
-            accessibilityLabel="Staff department"
-          >
-            <Picker.Item label="None" value="None" />
-            <Picker.Item label="Admin" value="Admin" />
-            <Picker.Item label="Management" value="Management" />
-          </Picker>
-          <TouchableOpacity onPress={() => setShowDatePicker(true)} accessibilityLabel="Select start date">
-            <TextInput
-              style={commonStyles.input}
-              placeholder="Start Date (YYYY-MM-DD)"
-              value={formData.started}
-              editable={false}
-              accessibilityLabel="Staff start date"
-            />
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker
-              value={formData.started ? new Date(formData.started) : new Date()}
-              mode="date"
-              display="default"
-              onChange={(event, selectedDate) => {
-                setShowDatePicker(false);
-                if (selectedDate) {
-                  setFormData({ ...formData, started: selectedDate.toISOString().split('T')[0] });
+
+          <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+            {['Name', 'Email', 'Phone', 'Role'].map((field) => (
+              <TextInput
+                key={field}
+                style={[styles.input, { fontSize: scale(14) }]}
+                placeholder={field}
+                value={formData[field.toLowerCase() as keyof Staff] as string}
+                keyboardType={field === 'Email' ? 'email-address' : field === 'Phone' ? 'phone-pad' : 'default'}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, [field.toLowerCase()]: text } as Staff)
                 }
-              }}
-            />
-          )}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginTop: 16 }}>
+                accessibilityLabel={`Staff ${field.toLowerCase()}`}
+              />
+            ))}
+
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={formData.status}
+                onValueChange={(val) => setFormData({ ...formData, status: val as 'active' | 'inactive' })}
+                accessibilityLabel="Staff status"
+              >
+                <Picker.Item label="Active" value="active" />
+                <Picker.Item label="Inactive" value="inactive" />
+              </Picker>
+            </View>
+
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={formData.department || 'None'}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, department: val === 'None' ? undefined : val })
+                }
+                accessibilityLabel="Staff department"
+              >
+                <Picker.Item label="None" value="None" />
+                <Picker.Item label="Admin" value="Admin" />
+                <Picker.Item label="Management" value="Management" />
+              </Picker>
+            </View>
+
+            <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+              <TextInput
+                style={[styles.input, { fontSize: scale(14) }]}
+                placeholder="Start Date (YYYY-MM-DD)"
+                value={formData.started}
+                editable={false}
+                accessibilityLabel="Staff start date"
+              />
+            </TouchableOpacity>
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={formData.started ? new Date(formData.started) : new Date()}
+                mode="date"
+                display="default"
+                onChange={(event, date) => {
+                  setShowDatePicker(false);
+                  if (date) setFormData({ ...formData, started: date.toISOString().split('T')[0] });
+                }}
+              />
+            )}
+          </ScrollView>
+
+          <View style={styles.buttonRow}>
             <TouchableOpacity
-              style={[commonStyles.button, { backgroundColor: colors.destructive, flex: 1 }]}
+              style={[styles.button, { backgroundColor: colors.destructive }]}
               onPress={onClose}
               accessibilityLabel="Cancel"
             >
-              <Text style={commonStyles.buttonText}>Cancel</Text>
+              <Text style={styles.buttonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[commonStyles.button, { backgroundColor: colors.primary, flex: 1 }]}
+              style={[styles.button, { backgroundColor: colors.primary }]}
               onPress={handleSubmit}
               accessibilityLabel="Save staff"
             >
-              <Text style={commonStyles.buttonText}>Save</Text>
+              <Text style={styles.buttonText}>Save</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -146,5 +145,61 @@ const StaffFormModal: React.FC<StaffFormModalProps> = ({ isOpen, onClose, onSave
     </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: width * 0.025,
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    width: width * 0.9,
+    borderRadius: 12,
+    padding: width * 0.05,
+    paddingBottom: width * 0.03,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: width * 0.04,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingVertical: width * 0.025,
+    paddingHorizontal: width * 0.035,
+    marginBottom: width * 0.03,
+    color: '#111827',
+  },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    marginBottom: width * 0.03,
+    overflow: 'hidden',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: width * 0.03,
+    gap: width * 0.02,
+  },
+  button: {
+    flex: 1,
+    paddingVertical: width * 0.035,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: scale(14),
+  },
+});
 
 export default StaffFormModal;

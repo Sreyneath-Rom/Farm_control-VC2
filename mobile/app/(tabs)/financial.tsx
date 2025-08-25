@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { ScrollView, View, Text, StyleSheet, useWindowDimensions } from 'react-native';
+import {
+  SafeAreaView,
+  ScrollView,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  useWindowDimensions,
+} from 'react-native';
 import OverView from '@/components/financial/OverView';
 import Income from '@/components/financial/Income';
 import Expense from '@/components/financial/Expense';
@@ -8,30 +16,29 @@ import Report from '@/components/financial/Report';
 
 const Financial = () => {
   const { width } = useWindowDimensions();
-
-  // Determine number of columns based on screen width
-  let cardWidth;
-  if (width < 480) {
-    // Small screens (e.g., phones in portrait)
-    cardWidth = width - 32; // Full width with padding
-  } else if (width < 768) {
-    // Medium screens (e.g., tablets in portrait or larger phones)
-    cardWidth = (width - 16 * 2) / 2; // 2 columns
-  } else {
-    // Large screens (e.g., tablets in landscape)
-    cardWidth = (width - 16 * 4) / 3; // 3 columns
-  }
-
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  }) + ' (+07)'; // Updated to Monday, August 25, 2025, 06:37 PM +07
-
   const [activeSection, setActiveSection] = useState('overview');
+
+  // Responsive cards per row
+  const isSmall = width < 480;
+  const isMedium = width < 768;
+
+ const getCardStyle = () => {
+  if (isSmall) return { flex: 1 };      // full width
+  if (isMedium) return { flex: 0.48 };  // ~48% width
+  return { flex: 0.31 };                // ~31% width
+};
+
+
+
+  const currentDate =
+    new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    }) + ' (+07)';
 
   const renderSectionContent = () => {
     switch (activeSection) {
@@ -51,145 +58,159 @@ const Financial = () => {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Financial Management</Text>
-        <Text style={styles.subtitle}>Track income, expenses, and financial performance as of {currentDate}</Text>
-      </View>
-
-      <View style={styles.navTabs}>
-        <Text
-          style={[styles.navTab, activeSection === 'overview' && styles.activeTab]}
-          onPress={() => setActiveSection('overview')}
-        >
-          Overview
-        </Text>
-        <Text
-          style={[styles.navTab, activeSection === 'income' && styles.activeTab]}
-          onPress={() => setActiveSection('income')}
-        >
-          Income
-        </Text>
-        <Text
-          style={[styles.navTab, activeSection === 'expenses' && styles.activeTab]}
-          onPress={() => setActiveSection('expenses')}
-        >
-          Expenses
-        </Text>
-        <Text
-          style={[styles.navTab, activeSection === 'sales' && styles.activeTab]}
-          onPress={() => setActiveSection('sales')}
-        >
-          Sales
-        </Text>
-        <Text
-          style={[styles.navTab, activeSection === 'reports' && styles.activeTab]}
-          onPress={() => setActiveSection('reports')}
-        >
-          Reports
-        </Text>
-      </View>
-
-      {activeSection === 'overview' && (
-        <View style={styles.grid}>
-          <View style={[styles.card, { width: cardWidth }]}>
-            <Text style={styles.cardTitle}>Total Income</Text>
-            <Text style={styles.cardValue}>$34,710</Text>
-            <Text style={styles.cardChange}>+12.5% from last month</Text>
-          </View>
-          <View style={[styles.card, { width: cardWidth }]}>
-            <Text style={styles.cardTitle}>Total Expenses</Text>
-            <Text style={styles.cardValue}>$4,400</Text>
-            <Text style={styles.cardChange}>-6.2% from last month</Text>
-          </View>
-          <View style={[styles.card, { width: cardWidth }]}>
-            <Text style={styles.cardTitle}>Net Profit</Text>
-            <Text style={styles.cardValue}>$30,310</Text>
-            <Text style={styles.cardChange}>This month</Text>
-          </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Financial Management</Text>
+          <Text style={styles.subtitle}>
+            Track income, expenses, and performance as of {currentDate}
+          </Text>
         </View>
-      )}
 
-      <View style={styles.content}>
-        {renderSectionContent()}
-      </View>
-    </ScrollView>
+        {/* Nav Tabs */}
+        <View style={styles.navTabs}>
+          {['overview', 'income', 'expenses', 'sales', 'reports'].map(
+            (tab) => (
+              <TouchableOpacity
+                key={tab}
+                style={[
+                  styles.navTab,
+                  activeSection === tab && styles.activeTab,
+                ]}
+                onPress={() => setActiveSection(tab)}
+              >
+                <Text
+                  style={[
+                    styles.navTabText,
+                    activeSection === tab && styles.activeTabText,
+                  ]}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            )
+          )}
+        </View>
+
+        {/* Overview Quick Stats */}
+        {activeSection === 'overview' && (
+          <View style={styles.grid}>
+            <View style={[styles.card, getCardStyle()]}>
+              <Text style={styles.cardTitle}>Total Income</Text>
+              <Text style={styles.cardValue}>$34,710</Text>
+              <Text style={styles.cardChange}>+12.5% from last month</Text>
+            </View>
+            <View style={[styles.card, getCardStyle()]}>
+              <Text style={styles.cardTitle}>Total Expenses</Text>
+              <Text style={styles.cardValue}>$4,400</Text>
+              <Text style={[styles.cardChange, { color: '#ef4444' }]}>
+                -6.2% from last month
+              </Text>
+            </View>
+            <View style={[styles.card, getCardStyle()]}>
+              <Text style={styles.cardTitle}>Net Profit</Text>
+              <Text style={styles.cardValue}>$30,310</Text>
+              <Text style={styles.cardChange}>This month</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Section Content */}
+        <View style={styles.content}>{renderSectionContent()}</View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f9fafb',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f3f4f6',
     padding: 16,
   },
   header: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1a202c',
-    marginBottom: 4,
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 6,
   },
   subtitle: {
     fontSize: 14,
-    color: '#718096',
+    color: '#6b7280',
   },
   navTabs: {
     flexDirection: 'row',
-    flexWrap: 'wrap', // Allow wrapping for small screens
-    gap: 8,
+    flexWrap: 'wrap',
     marginBottom: 24,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 10,
+    padding: 4,
   },
   navTab: {
-    fontSize: 16,
-    color: '#718096',
-    paddingBottom: 4,
-    paddingHorizontal: 8, // Add padding for better touch targets
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  navTabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
   },
   activeTab: {
-    color: '#10b981',
-    borderBottomWidth: 2,
-    borderBottomColor: '#10b981',
+    backgroundColor: '#10b981',
+  },
+  activeTabText: {
+    color: '#fff',
+    fontWeight: '600',
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: 16,
-    gap: 16,
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 16,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 2,
-    marginBottom: 16, // Add spacing between cards on small screens
   },
   cardTitle: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#1a202c',
+    color: '#6b7280',
     marginBottom: 4,
   },
   cardValue: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1a202c',
-    marginVertical: 4,
+    color: '#111827',
+    marginBottom: 4,
   },
   cardChange: {
     fontSize: 12,
     color: '#10b981',
   },
   content: {
-    marginTop: 16,
+    marginTop: 8,
   },
+
 });
 
 export default Financial;
