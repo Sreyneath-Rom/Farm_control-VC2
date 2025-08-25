@@ -4,7 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-nati
 
 // Export the Staff interface as a named export
 export interface Staff {
-  id?: string;
+  id: string; // Make id required
   name: string;
   email: string;
   phone: string;

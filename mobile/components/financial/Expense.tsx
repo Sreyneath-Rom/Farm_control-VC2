@@ -8,6 +8,7 @@ import {
   FlatList,
   useWindowDimensions,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Feather from 'react-native-vector-icons/Feather';
@@ -22,7 +23,7 @@ type ExpenseItem = {
   date: string;
 };
 
-const Expenses = () => {
+const Expense = () => {
   const { width } = useWindowDimensions();
   const [searchQuery, setSearchQuery] = useState('');
   const [timeFilter, setTimeFilter] = useState('this-month');
@@ -30,14 +31,15 @@ const Expenses = () => {
   const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [showFormDatePicker, setShowFormDatePicker] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [newExpense, setNewExpense] = useState<Partial<ExpenseItem>>({
+  const [newExpense, setNewExpense] = useState<Partial<Omit<ExpenseItem, 'amount'> & { amount: number | string }>>({
     category: '',
     description: '',
     supplier: '',
-    amount: '',
-    date: null,
+    amount: 0,
+    date: '',
   });
   const [selectedExpense, setSelectedExpense] = useState<ExpenseItem | null>(null);
   const [expenseHistory, setExpenseHistory] = useState<ExpenseItem[]>([
@@ -57,11 +59,11 @@ const Expenses = () => {
     addButton: { backgroundColor: '#10b981', padding: width < 480 ? 6 : 12, borderRadius: 8, flexDirection: 'row' as const, alignItems: 'center' as const, gap: width < 480 ? 4 : 8 },
     buttonText: { color: '#fff', fontWeight: '500' as const, fontSize: width < 480 ? 12 : 14 },
     modalOverlay: { flex: 1, justifyContent: 'center' as const, alignItems: 'center' as const, backgroundColor: 'rgba(0,0,0,0.5)' },
-    modalContent: { backgroundColor: '#fff', borderRadius: 8, padding: width < 480 ? 8 : 16, width: '80%' },
+    modalContent: { backgroundColor: '#fff', borderRadius: 8, padding: width < 480 ? 8 : 16, width: '80%' as const },
     modalTitle: { fontSize: width < 480 ? 14 : 16, fontWeight: '600' as const, color: '#1a202c', marginBottom: width < 480 ? 6 : 12 },
     formGrid: { flexDirection: 'column' as const, gap: width < 480 ? 4 : 8 },
     input: { padding: width < 480 ? 6 : 12, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8 },
-    dateInput: { padding: width < 480 ? 6 : 12, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, color: newExpense.date ? newExpense.date.toISOString().split('T')[0] : 'Select Date' },
+    dateInput: { padding: width < 480 ? 6 : 12, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, color: '#000' },
     buttonContainer: { flexDirection: 'row' as const, gap: width < 480 ? 4 : 8, marginTop: width < 480 ? 6 : 12 },
     submitButton: { flex: 1, backgroundColor: '#10b981', padding: width < 480 ? 6 : 12, borderRadius: 8, alignItems: 'center' as const },
     cancelButton: { flex: 1, backgroundColor: '#d1d5db', padding: width < 480 ? 6 : 12, borderRadius: 8, alignItems: 'center' as const },
@@ -83,8 +85,8 @@ const Expenses = () => {
       return;
     }
     const id = expenseHistory.length + 1;
-    setExpenseHistory([...expenseHistory, { id, ...newExpense, amount: Number(newExpense.amount), date: newExpense.date!.toISOString().split('T')[0] } as ExpenseItem]);
-    setNewExpense({ category: '', description: '', supplier: '', amount: '', date: null });
+    setExpenseHistory([...expenseHistory, { id, ...newExpense, amount: Number(newExpense.amount), date: newExpense.date!.toString().split('T')[0] } as ExpenseItem]);
+    setNewExpense({ category: '', description: '', supplier: '', amount: '', date: '' });
     setShowAddForm(false);
   };
 
@@ -93,8 +95,8 @@ const Expenses = () => {
       Alert.alert('Error', 'All fields are required');
       return;
     }
-    setExpenseHistory(expenseHistory.map(item => item.id === selectedExpense.id ? { ...item, ...newExpense, amount: Number(newExpense.amount), date: newExpense.date!.toISOString().split('T')[0] } as ExpenseItem : item));
-    setNewExpense({ category: '', description: '', supplier: '', amount: '', date: null });
+    setExpenseHistory(expenseHistory.map(item => item.id === selectedExpense.id ? { ...item, ...newExpense, amount: Number(newExpense.amount), date: newExpense.date!.toString().split('T')[0] } as ExpenseItem : item));
+    setNewExpense({ category: '', description: '', supplier: '', amount: '', date: '' });
     setSelectedExpense(null);
     setShowEditForm(false);
   };
@@ -130,26 +132,48 @@ const Expenses = () => {
     </View>
   );
 
+  const styles = getDynamicStyles();
+  const minTableWidth = 600;
+  const tableContent = (
+    <View>
+      <View style={styles.tableHeader}>
+        <Text style={styles.headerCell}>Category</Text>
+        <Text style={styles.headerCell}>Description</Text>
+        <Text style={styles.headerCell}>Supplier</Text>
+        <Text style={styles.headerCell}>Amount</Text>
+        <Text style={styles.headerCell}>Date</Text>
+        <Text style={styles.headerCell}>Actions</Text>
+      </View>
+      <FlatList
+        data={filteredExpenses}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        ListEmptyComponent={<View style={styles.emptyState}><Text style={styles.emptyText}>No expenses found</Text><Text style={styles.emptySubText}>Try adjusting your search or filters</Text></View>}
+        contentContainerStyle={{ paddingBottom: width < 480 ? 16 : 24 }}
+      />
+    </View>
+  );
+
   return (
-    <View style={getDynamicStyles().container}>
-      <View style={getDynamicStyles().header}>
+    <View style={styles.container}>
+      <View style={styles.header}>
         <TextInput
-          style={getDynamicStyles().searchInput}
+          style={styles.searchInput}
           placeholder="Search expenses..."
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
-        <TouchableOpacity style={getDynamicStyles().addButton} onPress={() => setShowAddForm(true)}>
+        <TouchableOpacity style={styles.addButton} onPress={() => setShowAddForm(true)}>
           <Feather name="plus" size={width < 480 ? 18 : 24} color="#fff" />
-          <Text style={getDynamicStyles().buttonText}>Add Expense</Text>
+          <Text style={styles.buttonText}>Add Expense</Text>
         </TouchableOpacity>
       </View>
-      <View style={getDynamicStyles().filterContainer}>
-        <Text style={getDynamicStyles().filterText}>Filter by:</Text>
+      <View style={styles.filterContainer}>
+        <Text style={styles.filterText}>Filter by:</Text>
         <Picker
           selectedValue={timeFilter}
           onValueChange={(itemValue) => setTimeFilter(itemValue as string)}
-          style={getDynamicStyles().picker}
+          style={styles.picker}
         >
           <Picker.Item label="This Month" value="this-month" />
           <Picker.Item label="Last Month" value="last-month" />
@@ -160,7 +184,7 @@ const Expenses = () => {
         <View style={{ flexDirection: 'row' as const, gap: width < 480 ? 4 : 8, marginBottom: width < 480 ? 8 : 12 }}>
           <TouchableOpacity onPress={() => setShowStartDatePicker(true)}>
             <TextInput
-              style={getDynamicStyles().dateInput}
+              style={styles.dateInput}
               placeholder="Start Date"
               value={customStartDate ? customStartDate.toISOString().split('T')[0] : ''}
               editable={false}
@@ -168,7 +192,7 @@ const Expenses = () => {
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setShowEndDatePicker(true)}>
             <TextInput
-              style={getDynamicStyles().dateInput}
+              style={styles.dateInput}
               placeholder="End Date"
               value={customEndDate ? customEndDate.toISOString().split('T')[0] : ''}
               editable={false}
@@ -199,87 +223,81 @@ const Expenses = () => {
         />
       )}
       {(showAddForm || showEditForm) && (
-        <View style={getDynamicStyles().modalOverlay}>
-          <View style={getDynamicStyles().modalContent}>
-            <Text style={getDynamicStyles().modalTitle}>{showEditForm ? 'Edit Expense' : 'Add New Expense'}</Text>
-            <View style={getDynamicStyles().formGrid}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{showEditForm ? 'Edit Expense' : 'Add New Expense'}</Text>
+            <View style={styles.formGrid}>
               <Picker
                 selectedValue={newExpense.category}
                 onValueChange={(itemValue) => setNewExpense({ ...newExpense, category: itemValue as string })}
-                style={getDynamicStyles().picker}
+                style={styles.picker}
               >
                 <Picker.Item label="Select Category" value="" />
                 {categories.map((cat) => <Picker.Item key={cat} label={cat} value={cat} />)}
               </Picker>
               <TextInput
-                style={getDynamicStyles().input}
+                style={styles.input}
                 placeholder="Description"
                 value={newExpense.description}
                 onChangeText={(text) => setNewExpense({ ...newExpense, description: text })}
               />
               <TextInput
-                style={getDynamicStyles().input}
+                style={styles.input}
                 placeholder="Supplier"
                 value={newExpense.supplier}
                 onChangeText={(text) => setNewExpense({ ...newExpense, supplier: text })}
               />
               <TextInput
-                style={getDynamicStyles().input}
+                style={styles.input}
                 placeholder="Amount"
-                value={newExpense.amount}
+                value={newExpense.amount !== undefined ? String(newExpense.amount) : ''}
                 keyboardType="numeric"
                 onChangeText={(text) => setNewExpense({ ...newExpense, amount: text })}
               />
               <TouchableOpacity onPress={() => setShowFormDatePicker(true)}>
                 <TextInput
-                  style={getDynamicStyles().dateInput}
+                  style={styles.dateInput}
                   placeholder="Date"
-                  value={newExpense.date ? newExpense.date.toISOString().split('T')[0] : ''}
+                  value={newExpense.date ? newExpense.date.toString().split('T')[0] : ''}
                   editable={false}
                 />
               </TouchableOpacity>
             </View>
             {showFormDatePicker && (
               <DateTimePicker
-                value={newExpense.date || new Date()}
+                value={typeof newExpense.date === 'string' ? new Date(newExpense.date) : (newExpense.date || new Date())}
                 mode="date"
                 display="default"
                 onChange={(event, selectedDate) => {
                   setShowFormDatePicker(false);
-                  setNewExpense({ ...newExpense, date: selectedDate || null });
+                  setNewExpense({ ...newExpense, date: selectedDate ? selectedDate.toISOString().split('T')[0] : '' });
                 }}
               />
             )}
-            <View style={getDynamicStyles().buttonContainer}>
-              <TouchableOpacity style={getDynamicStyles().submitButton} onPress={showEditForm ? editExpense : addExpense}>
-                <Text style={getDynamicStyles().buttonText}>{showEditForm ? 'Update' : 'Submit'}</Text>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.submitButton} onPress={showEditForm ? editExpense : addExpense}>
+                <Text style={styles.buttonText}>{showEditForm ? 'Update' : 'Submit'}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={getDynamicStyles().cancelButton} onPress={() => { setShowAddForm(false); setShowEditForm(false); setNewExpense({ category: '', description: '', supplier: '', amount: '', date: null }); }}>
-                <Text style={getDynamicStyles().buttonText}>Cancel</Text>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => { setShowAddForm(false); setShowEditForm(false); setNewExpense({ category: '', description: '', supplier: '', amount: '', date: '' }); }}>
+                <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       )}
-      <View style={getDynamicStyles().tableContainer}>
-        <View style={getDynamicStyles().tableHeader}>
-          <Text style={getDynamicStyles().headerCell}>Category</Text>
-          <Text style={getDynamicStyles().headerCell}>Description</Text>
-          <Text style={getDynamicStyles().headerCell}>Supplier</Text>
-          <Text style={getDynamicStyles().headerCell}>Amount</Text>
-          <Text style={getDynamicStyles().headerCell}>Date</Text>
-          <Text style={getDynamicStyles().headerCell}>Actions</Text>
-        </View>
-        <FlatList
-          data={[...filteredExpenses]}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
-          ListEmptyComponent={<View style={getDynamicStyles().emptyState}><Text style={getDynamicStyles().emptyText}>No expenses found</Text><Text style={getDynamicStyles().emptySubText}>Try adjusting your search or filters</Text></View>}
-          contentContainerStyle={{ paddingBottom: width < 480 ? 16 : 24 }}
-        />
+      <View style={styles.tableContainer}>
+        {width < minTableWidth ? (
+          <ScrollView horizontal={true}>
+            <View style={{ width: minTableWidth }}>
+              {tableContent}
+            </View>
+          </ScrollView>
+        ) : (
+          tableContent
+        )}
       </View>
     </View>
   );
 };
 
-export default Expenses;
+export default Expense;

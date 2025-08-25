@@ -1,6 +1,6 @@
-
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, Dimensions } from 'react-native';
+import { colors, commonStyles, typography } from '@/assets/styles';
 
 interface ConfirmationDialogProps {
   isOpen: boolean;
@@ -14,15 +14,25 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ isOpen, onConfi
 
   return (
     <Modal transparent visible={isOpen} animationType="fade">
-      <View style={styles.modalBackground}>
-        <View style={[styles.modalContainer, { width: width * 0.8 }]}>
-          <Text style={styles.message}>{message}</Text>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
-              <Text style={styles.buttonText}>Cancel</Text>
+      <View style={commonStyles.modalOverlay}>
+        <View style={[commonStyles.modalContent, { width: width * 0.8 }]}>
+          <Text style={[typography.body, { marginBottom: 20, textAlign: 'center' }]}>{message}</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
+            <TouchableOpacity
+              style={[commonStyles.button, { backgroundColor: colors.destructive, flex: 1 }]}
+              onPress={onCancel}
+              accessibilityLabel="Cancel action"
+              accessibilityRole="button"
+            >
+              <Text style={commonStyles.buttonText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
-              <Text style={styles.buttonText}>Confirm</Text>
+            <TouchableOpacity
+              style={[commonStyles.button, { backgroundColor: colors.primary, flex: 1 }]}
+              onPress={onConfirm}
+              accessibilityLabel="Confirm action"
+              accessibilityRole="button"
+            >
+              <Text style={commonStyles.buttonText}>Confirm</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -30,50 +40,5 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ isOpen, onConfi
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  modalBackground: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  message: {
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  cancelButton: {
-    backgroundColor: '#ef4444',
-    padding: 12,
-    borderRadius: 5,
-    flex: 1,
-    marginRight: 10,
-    minWidth: 100,
-  },
-  confirmButton: {
-    backgroundColor: '#22c55e',
-    padding: 12,
-    borderRadius: 5,
-    flex: 1,
-    minWidth: 100,
-  },
-  buttonText: {
-    color: 'white',
-    textAlign: 'center',
-    fontSize: 16,
-  },
-});
 
 export default ConfirmationDialog;

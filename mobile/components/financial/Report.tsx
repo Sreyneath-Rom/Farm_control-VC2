@@ -6,10 +6,10 @@ import {
   StyleSheet,
   TextInput,
   useWindowDimensions,
+  Alert,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import Feather from 'react-native-vector-icons/Feather';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 type ReportType = 'profit-loss' | 'cash-flow' | 'expense-analysis';
 
@@ -41,11 +41,11 @@ const Report = () => {
     generateButton: { backgroundColor: '#10b981', padding: width < 480 ? 6 : 12, borderRadius: 8, flexDirection: 'row' as const, alignItems: 'center' as const, gap: width < 480 ? 4 : 8 },
     buttonText: { color: '#fff', fontWeight: '500' as const, fontSize: width < 480 ? 12 : 14 },
     modalOverlay: { flex: 1, justifyContent: 'center' as const, alignItems: 'center' as const, backgroundColor: 'rgba(0,0,0,0.5)' },
-    modalContent: { backgroundColor: '#fff', borderRadius: 8, padding: width < 480 ? 8 : 16, width: '80%' },
+    modalContent: { backgroundColor: '#fff', borderRadius: 8, padding: width < 480 ? 8 : 16, width: '80%' as const },
     modalTitle: { fontSize: width < 480 ? 14 : 16, fontWeight: '600' as const, color: '#1a202c', marginBottom: width < 480 ? 6 : 12 },
     formGrid: { flexDirection: 'column' as const, gap: width < 480 ? 4 : 8 },
     input: { padding: width < 480 ? 6 : 12, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8 },
-    pickerContainer: { backgroundColor: '#fff', borderRadius: 8, padding: width < 480 ? 6 : 12, borderWidth: 1, borderColor: '#e2e8f0', width: '100%' },
+    pickerContainer: { backgroundColor: '#fff', borderRadius: 8, padding: width < 480 ? 6 : 12, borderWidth: 1, borderColor: '#e2e8f0', width: '100%' as const },
     buttonContainer: { flexDirection: 'row' as const, gap: width < 480 ? 4 : 8, marginTop: width < 480 ? 6 : 12 },
     submitButton: { flex: 1, backgroundColor: '#10b981', padding: width < 480 ? 6 : 12, borderRadius: 8, alignItems: 'center' as const },
     cancelButton: { flex: 1, backgroundColor: '#d1d5db', padding: width < 480 ? 6 : 12, borderRadius: 8, alignItems: 'center' as const },

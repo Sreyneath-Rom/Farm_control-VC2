@@ -1,8 +1,10 @@
-
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Modal, Dimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Modal, Dimensions, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import Feather from 'react-native-vector-icons/Feather';
 import { Staff } from '@/components/staff/StaffCard';
+import { colors, commonStyles, typography } from '@/assets/styles';
 
 interface StaffFormModalProps {
   isOpen: boolean;
@@ -14,79 +16,129 @@ interface StaffFormModalProps {
 const StaffFormModal: React.FC<StaffFormModalProps> = ({ isOpen, onClose, onSave, initialData }) => {
   const { width, height } = Dimensions.get('window');
   const [formData, setFormData] = useState<Staff>(initialData || {
+    id: '',
     name: '',
     email: '',
     phone: '',
     role: '',
     status: 'active',
     started: '',
+    department: undefined,
   });
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleSubmit = () => {
-    onSave(formData);
+    if (!formData.name || !formData.email || !formData.phone || !formData.role || !formData.started) {
+      Alert.alert('Error', 'All required fields must be filled');
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      Alert.alert('Error', 'Invalid email format');
+      return;
+    }
+    if (!/^\+?\d{7,15}$/.test(formData.phone)) {
+      Alert.alert('Error', 'Invalid phone number');
+      return;
+    }
+    onSave({ ...formData, id: formData.id || Date.now().toString() });
     onClose();
   };
 
   return (
-    <Modal transparent visible={isOpen} animationType="slide">
-      <View style={styles.modalBackground}>
-        <View style={[styles.modalContainer, { width: width * 0.9, maxHeight: height * 0.8 }]}>
-          <Text style={styles.title}>Add Staff</Text>
+    <Modal transparent visible={isOpen} animationType="fade">
+      <View style={commonStyles.modalOverlay}>
+        <View style={[commonStyles.modalContent, { width: width * 0.9, maxHeight: height * 0.8 }]}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Text style={{ ...typography.title, fontWeight: 'bold' }}>{initialData ? 'Edit Staff' : 'Add Staff'}</Text>
+            <TouchableOpacity onPress={onClose} accessibilityLabel="Close modal" accessibilityRole="button">
+              <Feather name="x" size={24} color={colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
           <TextInput
-            style={styles.input}
+            style={commonStyles.input}
             placeholder="Name"
             value={formData.name}
             onChangeText={(text) => setFormData({ ...formData, name: text })}
+            accessibilityLabel="Staff name"
           />
           <TextInput
-            style={styles.input}
+            style={commonStyles.input}
             placeholder="Email"
             value={formData.email}
             onChangeText={(text) => setFormData({ ...formData, email: text })}
             keyboardType="email-address"
+            accessibilityLabel="Staff email"
           />
           <TextInput
-            style={styles.input}
+            style={commonStyles.input}
             placeholder="Phone"
             value={formData.phone}
             onChangeText={(text) => setFormData({ ...formData, phone: text })}
             keyboardType="phone-pad"
+            accessibilityLabel="Staff phone"
           />
           <TextInput
-            style={styles.input}
+            style={commonStyles.input}
             placeholder="Role"
             value={formData.role}
             onChangeText={(text) => setFormData({ ...formData, role: text })}
+            accessibilityLabel="Staff role"
           />
           <Picker
-            style={styles.picker}
+            style={commonStyles.picker}
             selectedValue={formData.status}
             onValueChange={(itemValue) => setFormData({ ...formData, status: itemValue as 'active' | 'inactive' })}
+            accessibilityLabel="Staff status"
           >
             <Picker.Item label="Active" value="active" />
             <Picker.Item label="Inactive" value="inactive" />
           </Picker>
           <Picker
-            style={styles.picker}
+            style={commonStyles.picker}
             selectedValue={formData.department || 'None'}
             onValueChange={(itemValue) => setFormData({ ...formData, department: itemValue === 'None' ? undefined : itemValue })}
+            accessibilityLabel="Staff department"
           >
             <Picker.Item label="None" value="None" />
             <Picker.Item label="Admin" value="Admin" />
             <Picker.Item label="Management" value="Management" />
           </Picker>
-          <TextInput
-            style={styles.input}
-            placeholder="Start Date (YYYY-MM-DD)"
-            value={formData.started}
-            onChangeText={(text) => setFormData({ ...formData, started: text })}
-          />
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-              <Text style={styles.buttonText}>Cancel</Text>
+          <TouchableOpacity onPress={() => setShowDatePicker(true)} accessibilityLabel="Select start date">
+            <TextInput
+              style={commonStyles.input}
+              placeholder="Start Date (YYYY-MM-DD)"
+              value={formData.started}
+              editable={false}
+              accessibilityLabel="Staff start date"
+            />
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={formData.started ? new Date(formData.started) : new Date()}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                setShowDatePicker(false);
+                if (selectedDate) {
+                  setFormData({ ...formData, started: selectedDate.toISOString().split('T')[0] });
+                }
+              }}
+            />
+          )}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginTop: 16 }}>
+            <TouchableOpacity
+              style={[commonStyles.button, { backgroundColor: colors.destructive, flex: 1 }]}
+              onPress={onClose}
+              accessibilityLabel="Cancel"
+            >
+              <Text style={commonStyles.buttonText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={handleSubmit}>
-              <Text style={styles.buttonText}>Save</Text>
+            <TouchableOpacity
+              style={[commonStyles.button, { backgroundColor: colors.primary, flex: 1 }]}
+              onPress={handleSubmit}
+              accessibilityLabel="Save staff"
+            >
+              <Text style={commonStyles.buttonText}>Save</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -94,64 +146,5 @@ const StaffFormModal: React.FC<StaffFormModalProps> = ({ isOpen, onClose, onSave
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  modalBackground: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    backgroundColor: 'white',
-    padding: 15,
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10,
-    fontSize: 16,
-  },
-  picker: {
-    height: 50,
-    width: '100%',
-    marginBottom: 10,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 15,
-  },
-  cancelButton: {
-    backgroundColor: '#ef4444',
-    padding: 12,
-    borderRadius: 5,
-    flex: 1,
-    marginRight: 10,
-    minWidth: 100,
-  },
-  saveButton: {
-    backgroundColor: '#22c55e',
-    padding: 12,
-    borderRadius: 5,
-    flex: 1,
-    minWidth: 100,
-  },
-  buttonText: {
-    color: 'white',
-    textAlign: 'center',
-    fontSize: 16,
-  },
-});
 
 export default StaffFormModal;

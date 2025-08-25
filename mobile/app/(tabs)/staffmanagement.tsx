@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Modal } from 'react-native';
 import ConfirmationDialog from '@/components/staff/ConfirmationDialog';
 import StaffCard from '@/components/staff/StaffCard';
 import StaffFormModal from '@/components/staff/StaffFormModal';
@@ -17,6 +16,7 @@ const StaffManagement: React.FC = () => {
   ]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [filters, setFilters] = useState({ search: '', department: 'All Departments', status: 'All Status' });
 
@@ -42,6 +42,11 @@ const StaffManagement: React.FC = () => {
     setIsConfirmOpen(true);
   };
 
+  const handleViewStaff = (staff: Staff) => {
+    setSelectedStaff(staff);
+    setIsViewOpen(true);
+  };
+
   const handleConfirmDelete = () => {
     if (selectedStaff) {
       setStaffList(staffList.filter(staff => staff.id !== selectedStaff.id));
@@ -62,7 +67,7 @@ const StaffManagement: React.FC = () => {
   const filteredStaff = staffList.filter(staff =>
     (staff.name.toLowerCase().includes(filters.search.toLowerCase()) ||
      staff.role.toLowerCase().includes(filters.search.toLowerCase())) &&
-    (filters.department === 'All Departments' || staff.department === filters.department) &&
+    (filters.department === 'All Departments' || staff.department === filters.department || (!staff.department && filters.department === 'None')) &&
     (filters.status === 'All Status' || staff.status === filters.status)
   );
 
@@ -83,12 +88,12 @@ const StaffManagement: React.FC = () => {
         renderItem={({ item }) => (
           <StaffCard
             staff={item}
-            onView={() => console.log('View', item.name)}
+            onView={() => handleViewStaff(item)}
             onEdit={() => handleEditStaff(item)}
             onDelete={() => handleDeleteStaff(item)}
           />
         )}
-        keyExtractor={(item) => item.id || ''}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 20 }}
       />
       <StaffFormModal
@@ -103,6 +108,27 @@ const StaffManagement: React.FC = () => {
         onCancel={() => setIsConfirmOpen(false)}
         message="Are you sure you want to delete this staff member?"
       />
+      <Modal transparent visible={isViewOpen} animationType="slide">
+        <View style={styles.modalBackground}>
+          <View style={[styles.modalContainer, { width: width * 0.9, maxHeight: height * 0.8 }]}>
+            <Text style={styles.title}>Staff Details</Text>
+            {selectedStaff && (
+              <>
+                <Text style={styles.detailText}>Name: {selectedStaff.name}</Text>
+                <Text style={styles.detailText}>Email: {selectedStaff.email}</Text>
+                <Text style={styles.detailText}>Phone: {selectedStaff.phone}</Text>
+                <Text style={styles.detailText}>Role: {selectedStaff.role}</Text>
+                <Text style={styles.detailText}>Status: {selectedStaff.status}</Text>
+                <Text style={styles.detailText}>Started: {selectedStaff.started}</Text>
+                <Text style={styles.detailText}>Department: {selectedStaff.department || 'None'}</Text>
+              </>
+            )}
+            <TouchableOpacity style={styles.closeButton} onPress={() => setIsViewOpen(false)}>
+              <Text style={styles.buttonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -134,6 +160,34 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  detailText: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  closeButton: {
+    backgroundColor: '#ef4444',
+    padding: 12,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  buttonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontSize: 16,
   },
 });
 

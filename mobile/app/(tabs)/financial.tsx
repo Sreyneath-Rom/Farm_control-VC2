@@ -29,7 +29,7 @@ const Financial = () => {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
-  }) + ' (+07)'; // Updated to Saturday, August 23, 2025, 08:07 AM +07
+  }) + ' (+07)'; // Updated to Monday, August 25, 2025, 06:37 PM +07
 
   const [activeSection, setActiveSection] = useState('overview');
 

@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
   Alert,
   FlatList,
+  ScrollView,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Feather from 'react-native-vector-icons/Feather';
@@ -20,7 +21,7 @@ type IncomeItem = {
   description: string;
   customer: string;
   amount: number;
-  date: string;
+  date: string | Date;
 };
 
 const Income = () => {
@@ -31,14 +32,15 @@ const Income = () => {
   const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [showFormDatePicker, setShowFormDatePicker] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [newIncome, setNewIncome] = useState<Partial<IncomeItem>>({
     category: '',
     description: '',
     customer: '',
-    amount: '',
-    date: null,
+    amount: 0,
+    date: undefined,
   });
   const [selectedIncome, setSelectedIncome] = useState<IncomeItem | null>(null);
   const [incomeHistory, setIncomeHistory] = useState<IncomeItem[]>([
@@ -58,11 +60,11 @@ const Income = () => {
     addButton: { backgroundColor: '#10b981', padding: width < 480 ? 6 : 12, borderRadius: 8, flexDirection: 'row' as const, alignItems: 'center' as const, gap: width < 480 ? 4 : 8 },
     buttonText: { color: '#fff', fontWeight: '500' as const, fontSize: width < 480 ? 12 : 14 },
     modalOverlay: { flex: 1, justifyContent: 'center' as const, alignItems: 'center' as const, backgroundColor: 'rgba(0,0,0,0.5)' },
-    modalContent: { backgroundColor: '#fff', borderRadius: 8, padding: width < 480 ? 8 : 16, width: '80%' },
+    modalContent: { backgroundColor: '#fff', borderRadius: 8, padding: width < 480 ? 8 : 16, width: '80%' as const },
     modalTitle: { fontSize: width < 480 ? 14 : 16, fontWeight: '600' as const, color: '#1a202c', marginBottom: width < 480 ? 6 : 12 },
     formGrid: { flexDirection: 'column' as const, gap: width < 480 ? 4 : 8 },
     input: { padding: width < 480 ? 6 : 12, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8 },
-    dateInput: { padding: width < 480 ? 6 : 12, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, color: newIncome.date ? newIncome.date.toISOString().split('T')[0] : 'Select Date' },
+    dateInput: { padding: width < 480 ? 6 : 12, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, color: '#000' },
     buttonContainer: { flexDirection: 'row' as const, gap: width < 480 ? 4 : 8, marginTop: width < 480 ? 6 : 12 },
     submitButton: { flex: 1, backgroundColor: '#10b981', padding: width < 480 ? 6 : 12, borderRadius: 8, alignItems: 'center' as const },
     cancelButton: { flex: 1, backgroundColor: '#d1d5db', padding: width < 480 ? 6 : 12, borderRadius: 8, alignItems: 'center' as const },
@@ -84,8 +86,8 @@ const Income = () => {
       return;
     }
     const id = incomeHistory.length + 1;
-    setIncomeHistory([...incomeHistory, { id, ...newIncome, amount: Number(newIncome.amount), date: newIncome.date!.toISOString().split('T')[0] } as IncomeItem]);
-    setNewIncome({ category: '', description: '', customer: '', amount: '', date: null });
+    setIncomeHistory([...incomeHistory, { id, ...newIncome, amount: Number(newIncome.amount), date: newIncome.date!.toString().split('T')[0] } as IncomeItem]);
+    setNewIncome({ category: '', description: '', customer: '', amount: 0, date: undefined });
     setShowAddForm(false);
   };
 
@@ -94,8 +96,8 @@ const Income = () => {
       Alert.alert('Error', 'All fields are required');
       return;
     }
-    setIncomeHistory(incomeHistory.map(item => item.id === selectedIncome.id ? { ...item, ...newIncome, amount: Number(newIncome.amount), date: newIncome.date!.toISOString().split('T')[0] } as IncomeItem : item));
-    setNewIncome({ category: '', description: '', customer: '', amount: '', date: null });
+    setIncomeHistory(incomeHistory.map(item => item.id === selectedIncome.id ? { ...item, ...newIncome, amount: Number(newIncome.amount), date: newIncome.date!.toString().split('T')[0] } as IncomeItem : item));
+    setNewIncome({ category: '', description: '', customer: '', amount: 0, date: undefined });
     setSelectedIncome(null);
     setShowEditForm(false);
   };
@@ -119,7 +121,13 @@ const Income = () => {
       <Text style={getDynamicStyles().cell}>{item.description}</Text>
       <Text style={getDynamicStyles().cell}>{item.customer}</Text>
       <Text style={getDynamicStyles().cell}>${item.amount.toFixed(2)}</Text>
-      <Text style={getDynamicStyles().cell}>{item.date}</Text>
+      <Text style={getDynamicStyles().cell}>
+        {typeof item.date === 'string'
+          ? item.date
+          : item.date instanceof Date
+          ? item.date.toISOString().split('T')[0]
+          : ''}
+      </Text>
       <View style={getDynamicStyles().actionCell}>
         <TouchableOpacity onPress={() => { setSelectedIncome(item); setNewIncome(item); setShowEditForm(true); }}>
           <Text style={getDynamicStyles().actionText}>Edit</Text>
@@ -131,26 +139,48 @@ const Income = () => {
     </View>
   );
 
+  const styles = getDynamicStyles();
+  const minTableWidth = 600;
+  const tableContent = (
+    <View>
+      <View style={styles.tableHeader}>
+        <Text style={styles.headerCell}>Category</Text>
+        <Text style={styles.headerCell}>Description</Text>
+        <Text style={styles.headerCell}>Customer</Text>
+        <Text style={styles.headerCell}>Amount</Text>
+        <Text style={styles.headerCell}>Date</Text>
+        <Text style={styles.headerCell}>Actions</Text>
+      </View>
+      <FlatList
+        data={filteredIncome}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        ListEmptyComponent={<View style={styles.emptyState}><Text style={styles.emptyText}>No income records found</Text><Text style={styles.emptySubText}>Try adjusting your search or filters</Text></View>}
+        contentContainerStyle={{ paddingBottom: width < 480 ? 16 : 24 }}
+      />
+    </View>
+  );
+
   return (
-    <View style={getDynamicStyles().container}>
-      <View style={getDynamicStyles().header}>
+    <View style={styles.container}>
+      <View style={styles.header}>
         <TextInput
-          style={getDynamicStyles().searchInput}
+          style={styles.searchInput}
           placeholder="Search income..."
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
-        <TouchableOpacity style={getDynamicStyles().addButton} onPress={() => setShowAddForm(true)}>
+        <TouchableOpacity style={styles.addButton} onPress={() => setShowAddForm(true)}>
           <Feather name="plus" size={width < 480 ? 18 : 24} color="#fff" />
-          <Text style={getDynamicStyles().buttonText}>Add Income</Text>
+          <Text style={styles.buttonText}>Add Income</Text>
         </TouchableOpacity>
       </View>
-      <View style={getDynamicStyles().filterContainer}>
-        <Text style={getDynamicStyles().filterText}>Filter by:</Text>
+      <View style={styles.filterContainer}>
+        <Text style={styles.filterText}>Filter by:</Text>
         <Picker
           selectedValue={timeFilter}
           onValueChange={(itemValue) => setTimeFilter(itemValue as string)}
-          style={getDynamicStyles().picker}
+          style={styles.picker}
         >
           <Picker.Item label="This Month" value="this-month" />
           <Picker.Item label="Last Month" value="last-month" />
@@ -161,7 +191,7 @@ const Income = () => {
         <View style={{ flexDirection: 'row' as const, gap: width < 480 ? 4 : 8, marginBottom: width < 480 ? 8 : 12 }}>
           <TouchableOpacity onPress={() => setShowStartDatePicker(true)}>
             <TextInput
-              style={getDynamicStyles().dateInput}
+              style={styles.dateInput}
               placeholder="Start Date"
               value={customStartDate ? customStartDate.toISOString().split('T')[0] : ''}
               editable={false}
@@ -169,7 +199,7 @@ const Income = () => {
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setShowEndDatePicker(true)}>
             <TextInput
-              style={getDynamicStyles().dateInput}
+              style={styles.dateInput}
               placeholder="End Date"
               value={customEndDate ? customEndDate.toISOString().split('T')[0] : ''}
               editable={false}
@@ -200,84 +230,78 @@ const Income = () => {
         />
       )}
       {(showAddForm || showEditForm) && (
-        <View style={getDynamicStyles().modalOverlay}>
-          <View style={getDynamicStyles().modalContent}>
-            <Text style={getDynamicStyles().modalTitle}>{showEditForm ? 'Edit Income' : 'Add New Income'}</Text>
-            <View style={getDynamicStyles().formGrid}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{showEditForm ? 'Edit Income' : 'Add New Income'}</Text>
+            <View style={styles.formGrid}>
               <Picker
                 selectedValue={newIncome.category}
                 onValueChange={(itemValue) => setNewIncome({ ...newIncome, category: itemValue as string })}
-                style={getDynamicStyles().picker}
+                style={styles.picker}
               >
                 <Picker.Item label="Select Category" value="" />
                 {categories.map((cat) => <Picker.Item key={cat} label={cat} value={cat} />)}
               </Picker>
               <TextInput
-                style={getDynamicStyles().input}
+                style={styles.input}
                 placeholder="Description"
                 value={newIncome.description}
                 onChangeText={(text) => setNewIncome({ ...newIncome, description: text })}
               />
               <TextInput
-                style={getDynamicStyles().input}
+                style={styles.input}
                 placeholder="Customer"
                 value={newIncome.customer}
                 onChangeText={(text) => setNewIncome({ ...newIncome, customer: text })}
               />
               <TextInput
-                style={getDynamicStyles().input}
+                style={styles.input}
                 placeholder="Amount"
-                value={newIncome.amount}
+                value={newIncome.amount !== undefined ? String(newIncome.amount) : ''}
                 keyboardType="numeric"
-                onChangeText={(text) => setNewIncome({ ...newIncome, amount: text })}
+                onChangeText={(text) => setNewIncome({ ...newIncome, amount: Number(text) })}
               />
               <TouchableOpacity onPress={() => setShowFormDatePicker(true)}>
                 <TextInput
-                  style={getDynamicStyles().dateInput}
+                  style={styles.dateInput}
                   placeholder="Date"
-                  value={newIncome.date ? newIncome.date.toISOString().split('T')[0] : ''}
+                  value={newIncome.date ? newIncome.date.toString().split('T')[0] : ''}
                   editable={false}
                 />
               </TouchableOpacity>
             </View>
             {showFormDatePicker && (
               <DateTimePicker
-                value={newIncome.date || new Date()}
+                value={typeof newIncome.date === 'string' ? new Date(newIncome.date) : (newIncome.date || new Date())}
                 mode="date"
                 display="default"
                 onChange={(event, selectedDate) => {
                   setShowFormDatePicker(false);
-                  setNewIncome({ ...newIncome, date: selectedDate || null });
+                  setNewIncome({ ...newIncome, date: selectedDate || undefined });
                 }}
               />
             )}
-            <View style={getDynamicStyles().buttonContainer}>
-              <TouchableOpacity style={getDynamicStyles().submitButton} onPress={showEditForm ? editIncome : addIncome}>
-                <Text style={getDynamicStyles().buttonText}>{showEditForm ? 'Update' : 'Submit'}</Text>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.submitButton} onPress={showEditForm ? editIncome : addIncome}>
+                <Text style={styles.buttonText}>{showEditForm ? 'Update' : 'Submit'}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={getDynamicStyles().cancelButton} onPress={() => { setShowAddForm(false); setShowEditForm(false); setNewIncome({ category: '', description: '', customer: '', amount: '', date: null }); }}>
-                <Text style={getDynamicStyles().buttonText}>Cancel</Text>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => { setShowAddForm(false); setShowEditForm(false); setNewIncome({ category: '', description: '', customer: '', amount: 0, date: undefined }); }}>
+                <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       )}
-      <View style={getDynamicStyles().tableContainer}>
-        <View style={getDynamicStyles().tableHeader}>
-          <Text style={getDynamicStyles().headerCell}>Category</Text>
-          <Text style={getDynamicStyles().headerCell}>Description</Text>
-          <Text style={getDynamicStyles().headerCell}>Customer</Text>
-          <Text style={getDynamicStyles().headerCell}>Amount</Text>
-          <Text style={getDynamicStyles().headerCell}>Date</Text>
-          <Text style={getDynamicStyles().headerCell}>Actions</Text>
-        </View>
-        <FlatList
-          data={[...filteredIncome]}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
-          ListEmptyComponent={<View style={getDynamicStyles().emptyState}><Text style={getDynamicStyles().emptyText}>No income records found</Text><Text style={getDynamicStyles().emptySubText}>Try adjusting your search or filters</Text></View>}
-          contentContainerStyle={{ paddingBottom: width < 480 ? 16 : 24 }}
-        />
+      <View style={styles.tableContainer}>
+        {width < minTableWidth ? (
+          <ScrollView horizontal={true}>
+            <View style={{ width: minTableWidth }}>
+              {tableContent}
+            </View>
+          </ScrollView>
+        ) : (
+          tableContent
+        )}
       </View>
     </View>
   );

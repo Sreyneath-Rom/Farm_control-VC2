@@ -8,13 +8,15 @@ import {
   FlatList,
   useWindowDimensions,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Feather from 'react-native-vector-icons/Feather';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 type SaleItem = {
   id: number;
-  product: string;
+  category: string;
   description: string;
   customer: string;
   amount: number;
@@ -24,24 +26,29 @@ type SaleItem = {
 const Sale = () => {
   const { width } = useWindowDimensions();
   const [searchQuery, setSearchQuery] = useState('');
-  const [timeFilter, setTimeFilter] = useState('All Time');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [timeFilter, setTimeFilter] = useState('this-month');
+  const [customStartDate, setCustomStartDate] = useState<Date | null>(null);
+  const [customEndDate, setCustomEndDate] = useState<Date | null>(null);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [showFormDatePicker, setShowFormDatePicker] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [newSale, setNewSale] = useState<Partial<SaleItem>>({
-    product: '',
+  type NewSaleType = Omit<Partial<SaleItem>, 'amount' | 'date'> & { amount: string; date: Date | null };
+  const [newSale, setNewSale] = useState<NewSaleType>({
+    category: '',
     description: '',
     customer: '',
-    amount: 0,
-    date: '',
+    amount: '', // Store as string for TextInput
+    date: null, // Store as Date | null
   });
   const [selectedSale, setSelectedSale] = useState<SaleItem | null>(null);
   const [saleHistory, setSaleHistory] = useState<SaleItem[]>([
-    { id: 1, product: 'Pig Sales', description: '50 pigs sold to local market', customer: 'Local Market Co.', amount: 15000, date: '2024-01-15' },
-    { id: 2, product: 'Manure Sales', description: 'Organic fertilizer sales', customer: 'Garden Center', amount: 800, date: '2024-01-13' },
-    { id: 3, product: 'Pig Sales', description: '30 pigs sold to restaurant chain', customer: 'Restaurant Chain', amount: 8500, date: '2024-01-08' },
-    { id: 4, product: 'Egg Sales', description: 'Fresh eggs weekly delivery', customer: 'Local Grocery', amount: 1200, date: '2024-01-05' },
+    { id: 1, category: 'Livestock', description: 'Sale of 50 pigs', customer: 'Local Market Co.', amount: 15000, date: '2024-01-15' },
+    { id: 2, category: 'By-products', description: 'Manure sold to farm', customer: 'Green Farm Ltd.', amount: 800, date: '2024-01-13' },
   ]);
+
+  const categories = ['Livestock', 'By-products', 'Other'];
 
   const getDynamicStyles = () => ({
     container: { flex: 1, backgroundColor: '#fff', padding: width < 480 ? 8 : 16 },
@@ -53,10 +60,11 @@ const Sale = () => {
     addButton: { backgroundColor: '#10b981', padding: width < 480 ? 6 : 12, borderRadius: 8, flexDirection: 'row' as const, alignItems: 'center' as const, gap: width < 480 ? 4 : 8 },
     buttonText: { color: '#fff', fontWeight: '500' as const, fontSize: width < 480 ? 12 : 14 },
     modalOverlay: { flex: 1, justifyContent: 'center' as const, alignItems: 'center' as const, backgroundColor: 'rgba(0,0,0,0.5)' },
-    modalContent: { backgroundColor: '#fff', borderRadius: 8, padding: width < 480 ? 8 : 16, width: '80%' as const }, // Fixed width to '80%'
+    modalContent: { backgroundColor: '#fff', borderRadius: 8, padding: width < 480 ? 8 : 16, width: width * 0.8 },
     modalTitle: { fontSize: width < 480 ? 14 : 16, fontWeight: '600' as const, color: '#1a202c', marginBottom: width < 480 ? 6 : 12 },
     formGrid: { flexDirection: 'column' as const, gap: width < 480 ? 4 : 8 },
     input: { padding: width < 480 ? 6 : 12, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8 },
+    dateInput: { padding: width < 480 ? 6 : 12, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, color: '#000' },
     buttonContainer: { flexDirection: 'row' as const, gap: width < 480 ? 4 : 8, marginTop: width < 480 ? 6 : 12 },
     submitButton: { flex: 1, backgroundColor: '#10b981', padding: width < 480 ? 6 : 12, borderRadius: 8, alignItems: 'center' as const },
     cancelButton: { flex: 1, backgroundColor: '#d1d5db', padding: width < 480 ? 6 : 12, borderRadius: 8, alignItems: 'center' as const },
@@ -73,23 +81,44 @@ const Sale = () => {
   });
 
   const addSale = () => {
-    if (!newSale.product || !newSale.description || !newSale.customer || !newSale.amount || !newSale.date) {
+    if (!newSale.category || !newSale.description || !newSale.customer || !newSale.amount || !newSale.date) {
       Alert.alert('Error', 'All fields are required');
       return;
     }
+    const amount = Number(newSale.amount);
+    if (isNaN(amount)) {
+      Alert.alert('Error', 'Amount must be a valid number');
+      return;
+    }
     const id = saleHistory.length + 1;
-    setSaleHistory([...saleHistory, { id, ...newSale, amount: Number(newSale.amount), date: newSale.date } as SaleItem]);
-    setNewSale({ product: '', description: '', customer: '', amount: 0, date: '' });
+    setSaleHistory([...saleHistory, { id, ...newSale, amount, date: newSale.date.toISOString().split('T')[0] } as SaleItem]);
+    setNewSale({ category: '', description: '', customer: '', amount: '', date: null });
     setShowAddForm(false);
   };
 
   const editSale = () => {
-    if (!selectedSale || !newSale.product || !newSale.description || !newSale.customer || !newSale.amount || !newSale.date) {
+    if (!selectedSale || !newSale.category || !newSale.description || !newSale.customer || !newSale.amount || !newSale.date) {
       Alert.alert('Error', 'All fields are required');
       return;
     }
-    setSaleHistory(saleHistory.map(item => item.id === selectedSale.id ? { ...item, ...newSale, amount: Number(newSale.amount), date: newSale.date } as SaleItem : item));
-    setNewSale({ product: '', description: '', customer: '', amount: 0, date: '' });
+    const amount = Number(newSale.amount);
+    if (isNaN(amount)) {
+      Alert.alert('Error', 'Amount must be a valid number');
+      return;
+    }
+    setSaleHistory(
+      saleHistory.map(item =>
+        item.id === selectedSale.id
+          ? {
+              ...item,
+              ...newSale,
+              amount,
+              date: newSale.date ? newSale.date.toISOString().split('T')[0] : item.date,
+            } as SaleItem
+          : item
+      )
+    );
+    setNewSale({ category: '', description: '', customer: '', amount: '', date: null });
     setSelectedSale(null);
     setShowEditForm(false);
   };
@@ -101,23 +130,21 @@ const Sale = () => {
     ]);
   };
 
-  const filteredSales = saleHistory
-    .filter(item =>
-      item.product.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.customer.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-    .sort((a, b) => sortOrder === 'asc' ? a.amount - b.amount : b.amount - a.amount);
+  const filteredSales = saleHistory.filter(item =>
+    item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.customer.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const renderItem = ({ item }: { item: SaleItem }) => (
     <View style={getDynamicStyles().tableRow}>
-      <Text style={getDynamicStyles().cell}>{item.product}</Text>
+      <Text style={getDynamicStyles().cell}>{item.category}</Text>
       <Text style={getDynamicStyles().cell}>{item.description}</Text>
       <Text style={getDynamicStyles().cell}>{item.customer}</Text>
       <Text style={getDynamicStyles().cell}>${item.amount.toFixed(2)}</Text>
       <Text style={getDynamicStyles().cell}>{item.date}</Text>
       <View style={getDynamicStyles().actionCell}>
-        <TouchableOpacity onPress={() => { setSelectedSale(item); setNewSale(item); setShowEditForm(true); }}>
+        <TouchableOpacity onPress={() => { setSelectedSale(item); setNewSale({ ...item, amount: item.amount.toString(), date: new Date(item.date) }); setShowEditForm(true); }}>
           <Text style={getDynamicStyles().actionText}>Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => deleteSale(item.id)}>
@@ -127,110 +154,169 @@ const Sale = () => {
     </View>
   );
 
+  const styles = getDynamicStyles();
+  const minTableWidth = 600; // Numeric value for width
+  const tableContent = (
+    <View>
+      <View style={styles.tableHeader}>
+        <Text style={styles.headerCell}>Category</Text>
+        <Text style={styles.headerCell}>Description</Text>
+        <Text style={styles.headerCell}>Customer</Text>
+        <Text style={styles.headerCell}>Amount</Text>
+        <Text style={styles.headerCell}>Date</Text>
+        <Text style={styles.headerCell}>Actions</Text>
+      </View>
+      <FlatList
+        data={filteredSales}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        ListEmptyComponent={<View style={styles.emptyState}><Text style={styles.emptyText}>No sales records found</Text><Text style={styles.emptySubText}>Try adjusting your search or filters</Text></View>}
+        contentContainerStyle={{ paddingBottom: width < 480 ? 16 : 24 }}
+      />
+    </View>
+  );
+
   return (
-    <View style={getDynamicStyles().container}>
-      <View style={getDynamicStyles().header}>
+    <View style={styles.container}>
+      <View style={styles.header}>
         <TextInput
-          style={getDynamicStyles().searchInput}
+          style={styles.searchInput}
           placeholder="Search sales..."
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
-        <TouchableOpacity style={getDynamicStyles().addButton} onPress={() => setShowAddForm(true)}>
-          <MaterialIcons name="add" size={width < 480 ? 18 : 24} color="#fff" />
-          <Text style={getDynamicStyles().buttonText}>Add Sale</Text>
+        <TouchableOpacity style={styles.addButton} onPress={() => setShowAddForm(true)}>
+          <Feather name="plus" size={width < 480 ? 18 : 24} color="#fff" />
+          <Text style={styles.buttonText}>Add Sale</Text>
         </TouchableOpacity>
       </View>
-      <View style={getDynamicStyles().filterContainer}>
-        <Text style={getDynamicStyles().filterText}>Filter by:</Text>
+      <View style={styles.filterContainer}>
+        <Text style={styles.filterText}>Filter by:</Text>
         <Picker
           selectedValue={timeFilter}
-          onValueChange={(itemValue: string) => setTimeFilter(itemValue)}
-          style={getDynamicStyles().picker}
+          onValueChange={(itemValue) => setTimeFilter(itemValue as string)}
+          style={styles.picker}
         >
-          <Picker.Item label="All Time" value="all-time" />
           <Picker.Item label="This Month" value="this-month" />
           <Picker.Item label="Last Month" value="last-month" />
-        </Picker>
-        <Text style={getDynamicStyles().filterText}>Sort by Amount:</Text>
-        <Picker
-          selectedValue={sortOrder}
-          onValueChange={(itemValue: 'asc' | 'desc') => setSortOrder(itemValue)}
-          style={getDynamicStyles().picker}
-        >
-          <Picker.Item label="Descending" value="desc" />
-          <Picker.Item label="Ascending" value="asc" />
+          <Picker.Item label="Custom" value="custom" />
         </Picker>
       </View>
+      {timeFilter === 'custom' && (
+        <View style={{ flexDirection: 'row' as const, gap: width < 480 ? 4 : 8, marginBottom: width < 480 ? 8 : 12 }}>
+          <TouchableOpacity onPress={() => setShowStartDatePicker(true)}>
+            <TextInput
+              style={styles.dateInput}
+              placeholder="Start Date"
+              value={customStartDate ? customStartDate.toISOString().split('T')[0] : ''}
+              editable={false}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowEndDatePicker(true)}>
+            <TextInput
+              style={styles.dateInput}
+              placeholder="End Date"
+              value={customEndDate ? customEndDate.toISOString().split('T')[0] : ''}
+              editable={false}
+            />
+          </TouchableOpacity>
+        </View>
+      )}
+      {showStartDatePicker && (
+        <DateTimePicker
+          value={customStartDate || new Date()}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShowStartDatePicker(false);
+            setCustomStartDate(selectedDate || null);
+          }}
+        />
+      )}
+      {showEndDatePicker && (
+        <DateTimePicker
+          value={customEndDate || new Date()}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShowEndDatePicker(false);
+            setCustomEndDate(selectedDate || null);
+          }}
+        />
+      )}
       {(showAddForm || showEditForm) && (
-        <View style={getDynamicStyles().modalOverlay}>
-          <View style={getDynamicStyles().modalContent}>
-            <Text style={getDynamicStyles().modalTitle}>{showEditForm ? 'Edit Sale' : 'Add New Sale'}</Text>
-            <View style={getDynamicStyles().formGrid}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{showEditForm ? 'Edit Sale' : 'Add New Sale'}</Text>
+            <View style={styles.formGrid}>
+              <Picker
+                selectedValue={newSale.category}
+                onValueChange={(itemValue) => setNewSale({ ...newSale, category: itemValue as string })}
+                style={styles.picker}
+              >
+                <Picker.Item label="Select Category" value="" />
+                {categories.map((cat) => <Picker.Item key={cat} label={cat} value={cat} />)}
+              </Picker>
               <TextInput
-                style={getDynamicStyles().input}
-                placeholder="Product"
-                value={newSale.product}
-                onChangeText={(text) => setNewSale({ ...newSale, product: text })}
-              />
-              <TextInput
-                style={getDynamicStyles().input}
+                style={styles.input}
                 placeholder="Description"
                 value={newSale.description}
                 onChangeText={(text) => setNewSale({ ...newSale, description: text })}
               />
               <TextInput
-                style={getDynamicStyles().input}
+                style={styles.input}
                 placeholder="Customer"
                 value={newSale.customer}
                 onChangeText={(text) => setNewSale({ ...newSale, customer: text })}
               />
               <TextInput
-                style={getDynamicStyles().input}
+                style={styles.input}
                 placeholder="Amount"
-                value={newSale.amount ? newSale.amount.toString() : ''}
+                value={newSale.amount}
                 keyboardType="numeric"
-                onChangeText={(text) => setNewSale({ ...newSale, amount: text ? Number(text) : 0 })}
+                onChangeText={(text) => setNewSale({ ...newSale, amount: text })}
               />
-              <TextInput
-                style={getDynamicStyles().input}
-                placeholder="Date (YYYY-MM-DD)"
-                value={newSale.date}
-                onChangeText={(text) => setNewSale({ ...newSale, date: text })}
-              />
-            </View>
-            <View style={getDynamicStyles().buttonContainer}>
-              <TouchableOpacity style={getDynamicStyles().submitButton} onPress={showEditForm ? editSale : addSale}>
-                <Text style={getDynamicStyles().buttonText}>{showEditForm ? 'Update' : 'Submit'}</Text>
+              <TouchableOpacity onPress={() => setShowFormDatePicker(true)}>
+                <TextInput
+                  style={styles.dateInput}
+                  placeholder="Date"
+                  value={newSale.date ? newSale.date.toISOString().split('T')[0] : ''}
+                  editable={false}
+                />
               </TouchableOpacity>
-              <TouchableOpacity style={getDynamicStyles().cancelButton} onPress={() => { setShowAddForm(false); setShowEditForm(false); setNewSale({ product: '', description: '', customer: '', amount: 0, date: '' }); }}>
-                <Text style={getDynamicStyles().buttonText}>Cancel</Text>
+            </View>
+            {showFormDatePicker && (
+              <DateTimePicker
+                value={newSale.date || new Date()}
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowFormDatePicker(false);
+                  setNewSale({ ...newSale, date: selectedDate || null });
+                }}
+              />
+            )}
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.submitButton} onPress={showEditForm ? editSale : addSale}>
+                <Text style={styles.buttonText}>{showEditForm ? 'Update' : 'Submit'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cancelButton} onPress={() => { setShowAddForm(false); setShowEditForm(false); setNewSale({ category: '', description: '', customer: '', amount: '', date: null }); }}>
+                <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       )}
-      <View style={getDynamicStyles().tableContainer}>
-        <View style={getDynamicStyles().tableHeader}>
-          <Text style={getDynamicStyles().headerCell}>Product</Text>
-          <Text style={getDynamicStyles().headerCell}>Description</Text>
-          <Text style={getDynamicStyles().headerCell}>Customer</Text>
-          <Text style={getDynamicStyles().headerCell}>Amount</Text>
-          <Text style={getDynamicStyles().headerCell}>Date</Text>
-          <Text style={getDynamicStyles().headerCell}>Actions</Text>
-        </View>
-        <FlatList
-          data={filteredSales}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
-          ListEmptyComponent={
-            <View style={getDynamicStyles().emptyState}>
-              <Text style={getDynamicStyles().emptyText}>No sales found</Text>
-              <Text style={getDynamicStyles().emptySubText}>Try adjusting your search</Text>
+      <View style={styles.tableContainer}>
+        {width < minTableWidth ? (
+          <ScrollView horizontal={true}>
+            <View style={{ width: minTableWidth }}>
+              {tableContent}
             </View>
-          }
-          contentContainerStyle={{ paddingBottom: width < 480 ? 16 : 24 }}
-        />
+          </ScrollView>
+        ) : (
+          tableContent
+        )}
       </View>
     </View>
   );

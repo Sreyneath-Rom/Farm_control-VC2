@@ -27,7 +27,7 @@ const OverView = () => {
         <View style={[styles.card, { width: cardWidth }]}>
           <View style={styles.cardContent}>
             <View style={[styles.iconContainer, { backgroundColor: '#10b981' }]}>
-              <Feather name="trending-up" size={20} color="#fff" /> {/* Reduced size for mobile */}
+              <Feather name="trending-up" size={20} color="#fff" />
             </View>
             <View>
               <Text style={styles.cardLabel}>Total Income</Text>
@@ -40,7 +40,7 @@ const OverView = () => {
         <View style={[styles.card, { width: cardWidth }]}>
           <View style={styles.cardContent}>
             <View style={[styles.iconContainer, { backgroundColor: '#ef4444' }]}>
-              <Feather name="trending-down" size={20} color="#fff" /> {/* Reduced size for mobile */}
+              <Feather name="trending-down" size={20} color="#fff" />
             </View>
             <View>
               <Text style={styles.cardLabel}>Total Expenses</Text>
@@ -53,7 +53,7 @@ const OverView = () => {
         <View style={[styles.card, { width: cardWidth }]}>
           <View style={styles.cardContent}>
             <View style={[styles.iconContainer, { backgroundColor: '#3b82f6' }]}>
-              <Feather name="dollar-sign" size={20} color="#fff" /> {/* Reduced size for mobile */}
+              <Feather name="dollar-sign" size={20} color="#fff" />
             </View>
             <View>
               <Text style={styles.cardLabel}>Net Profit</Text>
@@ -100,7 +100,7 @@ const OverView = () => {
         </View>
         <View style={styles.transactionItem}>
           <View style={[styles.iconContainer, { backgroundColor: '#10b981' }]}>
-            <Feather name="trending-up" size={18} color="#fff" /> {/* Reduced size for mobile */}
+            <Feather name="trending-up" size={18} color="#fff" />
           </View>
           <View style={styles.transactionDetails}>
             <Text style={styles.transactionName}>50 pigs sold to local market</Text>
@@ -120,43 +120,43 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: 16,
-    gap: 8, // Reduced gap for mobile
+    gap: 8,
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: 8,
-    padding: 12, // Reduced padding for mobile
+    padding: 12,
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 1 }, // Reduced shadow offset
+    shadowOffset: { width: 0, height: 1 },
     shadowRadius: 2,
     elevation: 1,
-    marginBottom: 12, // Adjusted spacing for mobile
+    marginBottom: 12,
   },
   cardContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8, // Reduced gap for mobile
+    gap: 8,
   },
   iconContainer: {
-    width: 40, // Reduced width for mobile
-    height: 40, // Reduced height for mobile
-    borderRadius: 6, // Adjusted radius
+    width: 40,
+    height: 40,
+    borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
   },
   cardLabel: {
-    fontSize: 12, // Reduced font size for mobile
+    fontSize: 12,
     color: '#718096',
-    marginBottom: 2, // Reduced margin
+    marginBottom: 2,
   },
   cardValue: {
-    fontSize: 18, // Reduced font size for mobile
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#1a202c',
   },
   cardChange: {
-    fontSize: 10, // Reduced font size for mobile
+    fontSize: 10,
     color: '#10b981',
   },
   breakdownGrid: {
@@ -164,24 +164,24 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: 16,
-    gap: 8, // Reduced gap for mobile
+    gap: 8,
   },
   breakdownCard: {
     backgroundColor: '#fff',
     borderRadius: 8,
-    padding: 12, // Reduced padding for mobile
+    padding: 12,
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 1 }, // Reduced shadow offset
+    shadowOffset: { width: 0, height: 1 },
     shadowRadius: 2,
     elevation: 1,
-    marginBottom: 12, // Adjusted spacing for mobile
+    marginBottom: 12,
   },
   breakdownTitle: {
-    fontSize: 14, // Reduced font size for mobile
+    fontSize: 14,
     fontWeight: '600',
     color: '#1a202c',
-    marginBottom: 8, // Reduced margin
+    marginBottom: 8,
   },
   breakdownItem: {
     flexDirection: 'row',
@@ -189,21 +189,21 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   breakdownLabel: {
-    fontSize: 12, // Reduced font size for mobile
+    fontSize: 12,
     color: '#718096',
   },
   breakdownValue: {
-    fontSize: 12, // Reduced font size for mobile
+    fontSize: 12,
     fontWeight: '600',
     color: '#10b981',
   },
   transactionCard: {
     backgroundColor: '#fff',
     borderRadius: 8,
-    padding: 12, // Reduced padding for mobile
+    padding: 12,
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 1 }, // Reduced shadow offset
+    shadowOffset: { width: 0, height: 1 },
     shadowRadius: 2,
     elevation: 1,
   },
@@ -211,32 +211,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8, // Reduced margin
+    marginBottom: 8,
   },
   transactionTitle: {
-    fontSize: 14, // Reduced font size for mobile
+    fontSize: 14,
     fontWeight: '600',
     color: '#1a202c',
   },
   transactionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8, // Reduced gap for mobile
+    gap: 8,
   },
   transactionDetails: {
     flex: 1,
   },
   transactionName: {
-    fontSize: 12, // Reduced font size for mobile
+    fontSize: 12,
     fontWeight: '500',
     color: '#1a202c',
   },
   transactionDesc: {
-    fontSize: 10, // Reduced font size for mobile
+    fontSize: 10,
     color: '#718096',
   },
   transactionAmount: {
-    fontSize: 12, // Reduced font size for mobile
+    fontSize: 12,
     fontWeight: '600',
     color: '#10b981',
   },
