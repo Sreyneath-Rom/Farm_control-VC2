@@ -1,5 +1,13 @@
 import React from "react";
-import { View, Text, StyleSheet, FlatList, ListRenderItem } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ListRenderItem,
+  ViewStyle,
+  TextStyle,
+} from "react-native";
 
 // Define the type for each activity
 type ActivityItem = {
@@ -17,7 +25,12 @@ export default function RecentActivities() {
   ];
 
   const renderItem: ListRenderItem<ActivityItem> = ({ item }) => (
-    <View style={styles.card}>
+    <View
+      style={styles.card}
+      accessible
+      accessibilityLabel={`${item.user} ${item.action}, ${item.timestamp}`}
+      testID={`activity-${item.id}`}
+    >
       <Text style={styles.user}>{item.user}</Text>
       <Text style={styles.action}>{item.action}</Text>
       <Text style={styles.timestamp}>{item.timestamp}</Text>
@@ -26,18 +39,28 @@ export default function RecentActivities() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Recent Activities</Text>
+      <Text style={styles.title} accessibilityRole="header">
+        Recent Activities
+      </Text>
       <FlatList
         data={activities}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={styles.listContent}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create<{
+  container: ViewStyle;
+  title: TextStyle;
+  listContent: ViewStyle;
+  card: ViewStyle;
+  user: TextStyle;
+  action: TextStyle;
+  timestamp: TextStyle;
+}>({
   container: {
     backgroundColor: "#fff",
     borderRadius: 12,
@@ -54,6 +77,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
     color: "#111827",
+  },
+  listContent: {
+    padding: 16,
   },
   card: {
     borderWidth: 1,
