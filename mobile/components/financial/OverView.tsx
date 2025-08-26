@@ -5,66 +5,47 @@ import Feather from 'react-native-vector-icons/Feather';
 const OverView = () => {
   const { width } = useWindowDimensions();
 
-  // Determine number of columns based on screen width
-  let cardWidth, breakdownWidth;
-  if (width < 480) {
-    // Small screens (e.g., phones in portrait, ~320-480px)
-    cardWidth = width - 32; // Full width with 16px padding on each side
-    breakdownWidth = width - 32;
-  } else if (width < 768) {
-    // Medium screens (e.g., tablets in portrait or larger phones)
-    cardWidth = (width - 16 * 2) / 2; // 2 columns
-    breakdownWidth = (width - 16 * 2) / 2;
-  } else {
-    // Large screens (e.g., tablets in landscape)
-    cardWidth = (width - 16 * 4) / 3; // 3 columns
-    breakdownWidth = (width - 16 * 2) / 2; // 2 columns
-  }
+  const isSmall = width < 480;
+  const isMedium = width < 768;
+
+  const cardWidth = isSmall
+    ? '100%'
+    : isMedium
+    ? (width - 48) / 2
+    : (width - 64) / 3;
+
+  const breakdownWidth = isSmall ? '100%' : (width - 48) / 2;
 
   return (
     <View style={styles.container}>
+      {/* Summary Cards */}
       <View style={styles.grid}>
         <View style={[styles.card, { width: cardWidth }]}>
-          <View style={styles.cardContent}>
-            <View style={[styles.iconContainer, { backgroundColor: '#10b981' }]}>
-              <Feather name="trending-up" size={20} color="#fff" />
-            </View>
-            <View>
-              <Text style={styles.cardLabel}>Total Income</Text>
-              <Text style={styles.cardValue}>$34,710</Text>
-              <Text style={styles.cardChange}>+12.5% from last month</Text>
-            </View>
-          </View>
+          <Feather name="trending-up" size={20} color="#10b981" />
+          <Text style={styles.cardTitle}>Total Income</Text>
+          <Text style={styles.cardValue}>$34,710</Text>
+          <Text style={styles.cardChange}>+12.5% from last month</Text>
         </View>
 
         <View style={[styles.card, { width: cardWidth }]}>
-          <View style={styles.cardContent}>
-            <View style={[styles.iconContainer, { backgroundColor: '#ef4444' }]}>
-              <Feather name="trending-down" size={20} color="#fff" />
-            </View>
-            <View>
-              <Text style={styles.cardLabel}>Total Expenses</Text>
-              <Text style={styles.cardValue}>$4,400</Text>
-              <Text style={styles.cardChange}>-6.2% from last month</Text>
-            </View>
-          </View>
+          <Feather name="trending-down" size={20} color="#ef4444" />
+          <Text style={styles.cardTitle}>Total Expenses</Text>
+          <Text style={styles.cardValue}>$4,400</Text>
+          <Text style={[styles.cardChange, { color: '#ef4444' }]}>
+            -6.2% from last month
+          </Text>
         </View>
 
         <View style={[styles.card, { width: cardWidth }]}>
-          <View style={styles.cardContent}>
-            <View style={[styles.iconContainer, { backgroundColor: '#3b82f6' }]}>
-              <Feather name="dollar-sign" size={20} color="#fff" />
-            </View>
-            <View>
-              <Text style={styles.cardLabel}>Net Profit</Text>
-              <Text style={styles.cardValue}>$30,310</Text>
-              <Text style={styles.cardChange}>This month</Text>
-            </View>
-          </View>
+          <Feather name="dollar-sign" size={20} color="#3b82f6" />
+          <Text style={styles.cardTitle}>Net Profit</Text>
+          <Text style={styles.cardValue}>$30,310</Text>
+          <Text style={styles.cardChange}>This month</Text>
         </View>
       </View>
 
-      <View style={styles.breakdownGrid}>
+      {/* Breakdown Cards */}
+      <View style={styles.grid}>
         <View style={[styles.breakdownCard, { width: breakdownWidth }]}>
           <Text style={styles.breakdownTitle}>Income by Category</Text>
           <View style={styles.breakdownItem}>
@@ -94,17 +75,14 @@ const OverView = () => {
         </View>
       </View>
 
+      {/* Recent Transaction */}
       <View style={styles.transactionCard}>
-        <View style={styles.transactionHeader}>
-          <Text style={styles.transactionTitle}>Recent Transactions</Text>
-        </View>
+        <Text style={styles.transactionTitle}>Recent Transaction</Text>
         <View style={styles.transactionItem}>
-          <View style={[styles.iconContainer, { backgroundColor: '#10b981' }]}>
-            <Feather name="trending-up" size={18} color="#fff" />
-          </View>
+          <Feather name="trending-up" size={18} color="#10b981" />
           <View style={styles.transactionDetails}>
             <Text style={styles.transactionName}>50 pigs sold to local market</Text>
-            <Text style={styles.transactionDesc}>Pig Sales • 1/15/2024</Text>
+            <Text style={styles.transactionDesc}>Pig Sales • 2024-01-15</Text>
           </View>
           <Text style={styles.transactionAmount}>+$15,000</Text>
         </View>
@@ -112,73 +90,58 @@ const OverView = () => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 1 },
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    backgroundColor: '#fff',
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    gap: 12,
     marginBottom: 16,
-    gap: 8,
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
+    elevation: 2,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 2,
-    elevation: 1,
-    marginBottom: 12,
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
   },
-  cardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cardLabel: {
-    fontSize: 12,
-    color: '#718096',
-    marginBottom: 2,
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6b7280',
+    marginTop: 8,
   },
   cardValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1a202c',
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#111827',
+    marginVertical: 4,
   },
   cardChange: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#10b981',
-  },
-  breakdownGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-    gap: 8,
   },
   breakdownCard: {
     backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
+    elevation: 2,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 2,
-    elevation: 1,
-    marginBottom: 12,
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
   },
   breakdownTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     color: '#1a202c',
     marginBottom: 8,
@@ -189,57 +152,52 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   breakdownLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#718096',
   },
   breakdownValue: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: '#10b981',
   },
   transactionCard: {
     backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
+    elevation: 2,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  transactionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    marginBottom: 30,
   },
   transactionTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     color: '#1a202c',
+    marginBottom: 8,
   },
   transactionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
   transactionDetails: {
     flex: 1,
   },
   transactionName: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
     color: '#1a202c',
   },
   transactionDesc: {
-    fontSize: 10,
+    fontSize: 11,
     color: '#718096',
   },
   transactionAmount: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: '#10b981',
   },
 });
-
 export default OverView;

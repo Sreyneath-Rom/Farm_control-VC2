@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   useWindowDimensions,
 } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import OverView from '@/components/financial/OverView';
 import Income from '@/components/financial/Income';
 import Expense from '@/components/financial/Expense';
@@ -18,17 +19,14 @@ const Financial = () => {
   const { width } = useWindowDimensions();
   const [activeSection, setActiveSection] = useState('overview');
 
-  // Responsive cards per row
   const isSmall = width < 480;
   const isMedium = width < 768;
 
- const getCardStyle = () => {
-  if (isSmall) return { flex: 1 };      // full width
-  if (isMedium) return { flex: 0.48 };  // ~48% width
-  return { flex: 0.31 };                // ~31% width
-};
-
-
+  const getCardStyle = () => {
+    if (isSmall) return { flex: 1 };
+    if (isMedium) return { flex: 0.48 };
+    return { flex: 0.31 };
+  };
 
   const currentDate =
     new Date().toLocaleDateString('en-US', {
@@ -42,8 +40,7 @@ const Financial = () => {
 
   const renderSectionContent = () => {
     switch (activeSection) {
-      case 'overview':
-        return <OverView />;
+    
       case 'income':
         return <Income />;
       case 'expenses':
@@ -59,10 +56,7 @@ const Financial = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        style={styles.container}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Financial Management</Text>
@@ -71,53 +65,30 @@ const Financial = () => {
           </Text>
         </View>
 
-        {/* Nav Tabs */}
-        <View style={styles.navTabs}>
-          {['overview', 'income', 'expenses', 'sales', 'reports'].map(
-            (tab) => (
-              <TouchableOpacity
-                key={tab}
+        {/* Tabs */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.navTabs}>
+          {['overview', 'income', 'expenses', 'sales', 'reports'].map((tab) => (
+            <TouchableOpacity
+              key={tab}
+              style={[
+                styles.navTab,
+                activeSection === tab && styles.activeTab,
+              ]}
+              onPress={() => setActiveSection(tab)}
+            >
+              <Text
                 style={[
-                  styles.navTab,
-                  activeSection === tab && styles.activeTab,
+                  styles.navTabText,
+                  activeSection === tab && styles.activeTabText,
                 ]}
-                onPress={() => setActiveSection(tab)}
               >
-                <Text
-                  style={[
-                    styles.navTabText,
-                    activeSection === tab && styles.activeTabText,
-                  ]}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            )
-          )}
-        </View>
-
-        {/* Overview Quick Stats */}
-        {activeSection === 'overview' && (
-          <View style={styles.grid}>
-            <View style={[styles.card, getCardStyle()]}>
-              <Text style={styles.cardTitle}>Total Income</Text>
-              <Text style={styles.cardValue}>$34,710</Text>
-              <Text style={styles.cardChange}>+12.5% from last month</Text>
-            </View>
-            <View style={[styles.card, getCardStyle()]}>
-              <Text style={styles.cardTitle}>Total Expenses</Text>
-              <Text style={styles.cardValue}>$4,400</Text>
-              <Text style={[styles.cardChange, { color: '#ef4444' }]}>
-                -6.2% from last month
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </Text>
-            </View>
-            <View style={[styles.card, getCardStyle()]}>
-              <Text style={styles.cardTitle}>Net Profit</Text>
-              <Text style={styles.cardValue}>$30,310</Text>
-              <Text style={styles.cardChange}>This month</Text>
-            </View>
-          </View>
-        )}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+       
 
         {/* Section Content */}
         <View style={styles.content}>{renderSectionContent()}</View>
@@ -125,7 +96,6 @@ const Financial = () => {
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -133,7 +103,8 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
   header: {
     marginBottom: 20,
@@ -150,17 +121,14 @@ const styles = StyleSheet.create({
   },
   navTabs: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 24,
-    backgroundColor: '#e5e7eb',
-    borderRadius: 10,
-    padding: 4,
+    marginBottom: 16,
+    gap: 8,
   },
   navTab: {
-    flex: 1,
-    alignItems: 'center',
     paddingVertical: 10,
+    paddingHorizontal: 16,
     borderRadius: 8,
+   
   },
   navTabText: {
     fontSize: 14,
@@ -178,15 +146,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    gap: 12,
     marginBottom: 16,
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.06,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 2,
@@ -195,13 +163,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#6b7280',
-    marginBottom: 4,
+    marginTop: 8,
   },
   cardValue: {
     fontSize: 22,
     fontWeight: '700',
     color: '#111827',
-    marginBottom: 4,
+    marginVertical: 4,
   },
   cardChange: {
     fontSize: 12,
@@ -210,7 +178,5 @@ const styles = StyleSheet.create({
   content: {
     marginTop: 8,
   },
-
 });
-
 export default Financial;
