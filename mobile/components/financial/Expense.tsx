@@ -1,51 +1,19 @@
 import React, { useState } from 'react';
 import {
-  SafeAreaView,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useWindowDimensions,
   ScrollView,
+  SafeAreaView,
   Alert,
   FlatList,
-  TouchableOpacity,
 } from 'react-native';
-import { Input, Button, Icon } from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
+import Feather from 'react-native-vector-icons/Feather';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { createTheme, ThemeProvider, createBox, createText } from '@shopify/restyle';
-
-const theme = createTheme({
-  colors: {
-    background: '#f9fafb',
-    primary: '#10b981',
-    secondary: '#6b7280',
-    danger: '#ef4444',
-    text: '#111827',
-    muted: '#9ca3af',
-    white: '#ffffff',
-  },
-  spacing: {
-    s: 8,
-    m: 16,
-    l: 24,
-  },
-  textVariants: {
-    header: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: 'text',
-    },
-    body: {
-      fontSize: 16,
-      color: 'text',
-    },
-    muted: {
-      fontSize: 14,
-      color: 'muted',
-    },
-  },
-});
-
-type Theme = typeof theme;
-const Box = createBox<Theme>();
-const Text = createText<Theme>();
+import styles from '@/assets/Expense.styles';
 
 type ExpenseItem = {
   id: number;
@@ -59,13 +27,14 @@ type ExpenseItem = {
 const categories = ['Feed', 'Equipment', 'Labor', 'Other'];
 
 const Expense = () => {
+  const { width } = useWindowDimensions();
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [timeFilter, setTimeFilter] = useState('this-month');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<ExpenseItem | null>(null);
-  const [formData, setFormData] = useState<
-    Partial<Omit<ExpenseItem, 'amount'> & { amount: number | string }>
-  >({
+  const [newExpense, setNewExpense] = useState<Partial<Omit<ExpenseItem, 'amount'> & { amount: number | string }>>({
     category: '',
     description: '',
     supplier: '',
@@ -74,221 +43,153 @@ const Expense = () => {
   });
 
   const [expenseHistory, setExpenseHistory] = useState<ExpenseItem[]>([
-    {
-      id: 1,
-      category: 'Feed',
-      description: 'Purchase of pig feed',
-      supplier: 'Farm Supply Co.',
-      amount: 5000,
-      date: '2024-01-15',
-    },
-    {
-      id: 2,
-      category: 'Equipment',
-      description: 'New tractor repair',
-      supplier: 'Machinery Inc.',
-      amount: 3000,
-      date: '2024-01-13',
-    },
+    { id: 1, category: 'Feed', description: 'Purchase of pig feed', supplier: 'Farm Supply Co.', amount: 5000, date: '2024-01-15' },
+    { id: 2, category: 'Equipment', description: 'New tractor repair', supplier: 'Machinery Inc.', amount: 3000, date: '2024-01-13' },
   ]);
 
-  const filteredExpenses = expenseHistory.filter((e) =>
-    e.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleSubmit = () => {
-    const { category, description, supplier, amount, date } = formData;
-    if (!category || !description || !supplier || !amount || !date) {
+  // Add Expense
+  const addExpense = () => {
+    if (!newExpense.category || !newExpense.description || !newExpense.supplier || !newExpense.amount || !newExpense.date) {
       Alert.alert('Error', 'Please fill all fields');
       return;
     }
+    const newId = expenseHistory.length ? expenseHistory[expenseHistory.length - 1].id + 1 : 1;
+    setExpenseHistory([...expenseHistory, { ...newExpense, amount: Number(newExpense.amount), id: newId } as ExpenseItem]);
+    setNewExpense({ category: '', description: '', supplier: '', amount: '', date: '' });
+    setShowAddForm(false);
+  };
 
-    if (selectedExpense) {
-      const updated = expenseHistory.map((e) =>
-        e.id === selectedExpense.id
-          ? { ...selectedExpense, ...formData, amount: Number(amount) }
-          : e
-      );
-      setExpenseHistory(updated);
-    } else {
-      const newId = expenseHistory.length
-        ? expenseHistory[expenseHistory.length - 1].id + 1
-        : 1;
-      setExpenseHistory([
-        ...expenseHistory,
-        { ...formData, id: newId, amount: Number(amount) } as ExpenseItem,
-      ]);
-    }
-
-    setFormData({
-      category: '',
-      description: '',
-      supplier: '',
-      amount: '',
-      date: '',
-    });
+  // Edit Expense
+  const editExpense = () => {
+    if (!selectedExpense) return;
+    setExpenseHistory(expenseHistory.map(exp => (exp.id === selectedExpense.id ? { ...selectedExpense } : exp)));
     setSelectedExpense(null);
-    setShowForm(false);
+    setShowEditForm(false);
   };
 
-  const handleEdit = (item: ExpenseItem) => {
-    setSelectedExpense(item);
-    setFormData(item);
-    setShowForm(true);
-  };
-
-  const handleDelete = (id: number) => {
+  // Delete Expense
+  const deleteExpense = (id: number) => {
     Alert.alert('Confirm Delete', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () =>
-          setExpenseHistory(expenseHistory.filter((e) => e.id !== id)),
-      },
+      { text: 'Delete', style: 'destructive', onPress: () => setExpenseHistory(expenseHistory.filter(e => e.id !== id)) },
     ]);
   };
 
+  const minTableWidth = 600;
+
+  const filteredExpenses = expenseHistory.filter(e => e.description.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  const renderItem = ({ item }: { item: ExpenseItem }) => (
+    <View style={styles.tableRow}>
+      <Text style={styles.cell}>{item.category}</Text>
+      <Text style={styles.cell}>{item.description}</Text>
+      <Text style={styles.cell}>{item.supplier}</Text>
+      <Text style={styles.cell}>{item.amount}</Text>
+      <Text style={styles.cell}>{item.date}</Text>
+      <View style={styles.actionCell}>
+        <TouchableOpacity
+          onPress={() => {
+            setSelectedExpense(item);
+            setShowEditForm(true);
+          }}
+        >
+          <Text style={styles.actionText}>Edit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => deleteExpense(item.id)}>
+          <Text style={[styles.actionText, { color: 'red' }]}>Delete</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
-    <ThemeProvider theme={theme}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-        <Box padding="m">
-          <Input
-            placeholder="Search expenses..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            leftIcon={<Icon name="search" type="feather" />}
-          />
-          <Button
-            title="Add Expense"
-            icon={{ name: 'plus', type: 'feather', color: 'white' }}
-            buttonStyle={{ backgroundColor: theme.colors.primary }}
-            onPress={() => setShowForm(true)}
-          />
-        </Box>
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search expenses..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        <TouchableOpacity style={styles.addButton} onPress={() => setShowAddForm(true)}>
+          <Feather name="plus" size={18} color="#fff" />
+          <Text style={styles.buttonText}>Add Expense</Text>
+        </TouchableOpacity>
+      </View>
 
-        <ScrollView horizontal>
-          <Box padding="m" minWidth={600}>
-            <Box flexDirection="row" justifyContent="space-between" marginBottom="s">
-              {['Category', 'Description', 'Supplier', 'Amount', 'Date', 'Actions'].map((label) => (
-                <Text key={label} style={{ fontWeight: 'bold' }}>{label}</Text>
+      {/* Filter */}
+      <View style={styles.filterContainer}>
+        <Text style={styles.filterText}>Filter by:</Text>
+        <Picker selectedValue={timeFilter} onValueChange={(val) => setTimeFilter(val as string)} style={styles.picker}>
+          <Picker.Item label="This Month" value="this-month" />
+          <Picker.Item label="Last Month" value="last-month" />
+          <Picker.Item label="Custom" value="custom" />
+        </Picker>
+      </View>
+
+      {/* Table */}
+      <View style={styles.tableContainer}>
+        <View style={width < minTableWidth ? { width: minTableWidth } : undefined}>
+          <View style={styles.tableHeader}>
+            <Text style={styles.headerCell}>Category</Text>
+            <Text style={styles.headerCell}>Description</Text>
+            <Text style={styles.headerCell}>Supplier</Text>
+            <Text style={styles.headerCell}>Amount</Text>
+            <Text style={styles.headerCell}>Date</Text>
+            <Text style={styles.headerCell}>Actions</Text>
+          </View>
+          {filteredExpenses.length ? (
+            <FlatList data={filteredExpenses} renderItem={renderItem} keyExtractor={(item) => item.id.toString()} />
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No expenses found</Text>
+              <Text style={styles.emptySubText}>Try adding a new expense or changing the filter.</Text>
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* Add/Edit Modal */}
+      {(showAddForm || showEditForm) && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalTitle}>{showEditForm ? 'Edit Expense' : 'Add Expense'}</Text>
+              {['category', 'description', 'supplier', 'amount', 'date'].map((field) => (
+                <TextInput
+                  key={field}
+                  style={styles.input}
+                  placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                  value={(showEditForm && selectedExpense ? (selectedExpense as any)[field] : (newExpense as any)[field])?.toString() || ''}
+                  onChangeText={(val) => {
+                    if (showEditForm && selectedExpense) setSelectedExpense({ ...selectedExpense, [field]: field === 'amount' ? Number(val) : val });
+                    else setNewExpense({ ...newExpense, [field]: field === 'amount' ? Number(val) : val });
+                  }}
+                />
               ))}
-            </Box>
-
-            {filteredExpenses.length ? (
-              <FlatList
-                data={filteredExpenses}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                  <Box flexDirection="row" justifyContent="space-between" marginBottom="s">
-                    <Text>{item.category}</Text>
-                    <Text>{item.description}</Text>
-                    <Text>{item.supplier}</Text>
-                    <Text>${item.amount}</Text>
-                    <Text>{item.date}</Text>
-                    <Box flexDirection="row">
-                      <Button title="Edit" type="clear" onPress={() => handleEdit(item)} />
-                      <Button
-                        title="Delete"
-                        type="clear"
-                        titleStyle={{ color: theme.colors.danger }}
-                        onPress={() => handleDelete(item.id)}
-                      />
-                    </Box>
-                  </Box>
-                )}
-              />
-            ) : (
-              <Box alignItems="center" marginTop="l">
-                <Text style={{ fontSize: 14, color: theme.colors.muted }}>
-                  No expenses found
-                </Text>
-              </Box>
-            )}
-          </Box>
-        </ScrollView>
-
-        {showForm && (
-          <Box padding="l" backgroundColor="white">
-            <Text style={{ fontSize: 20, fontWeight: 'bold', color: theme.colors.text }}>
-              {selectedExpense ? 'Edit Expense' : 'Add Expense'}
-            </Text>
-
-            <Text style={{ marginTop: 8 }}>Category</Text>
-            <Picker
-              selectedValue={formData.category}
-              onValueChange={(val) => setFormData({ ...formData, category: val })}
-            >
-              <Picker.Item label="Select Category" value="" />
-              {categories.map((cat) => (
-                <Picker.Item key={cat} label={cat} value={cat} />
-              ))}
-            </Picker>
-
-            <Input
-              label="Description"
-              value={formData.description}
-              onChangeText={(val) => setFormData({ ...formData, description: val })}
-            />
-            <Input
-              label="Supplier"
-              value={formData.supplier}
-              onChangeText={(val) => setFormData({ ...formData, supplier: val })}
-            />
-            <Input
-              label="Amount"
-              value={formData.amount?.toString()}
-              keyboardType="numeric"
-              onChangeText={(val) => setFormData({ ...formData, amount: Number(val) })}
-            />
-            <Input
-              label="Date"
-              value={formData.date}
-              onFocus={() => setShowDatePicker(true)}
-              editable={false}
-            />
-
-            {showDatePicker && (
-              <DateTimePicker
-                value={new Date()}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowDatePicker(false);
-                  if (selectedDate) {
-                    const formatted = selectedDate.toISOString().split('T')[0];
-                    setFormData({ ...formData, date: formatted });
-                  }
-                }}
-              />
-            )}
-
-            <Box flexDirection="row" justifyContent="space-between" marginTop="m">
-              <Button
-                title={selectedExpense ? 'Save' : 'Add'}
-                onPress={handleSubmit}
-                buttonStyle={{ backgroundColor: theme.colors.primary }}
-              />
-              <Button
-                title="Cancel"
-                type="outline"
-                onPress={() => {
-                  setShowForm(false);
-                  setSelectedExpense(null);
-                  setFormData({
-                    category: '',
-                    description: '',
-                                        supplier: '',
-                    amount: '',
-                    date: '',
-                  });
-                }}
-              />
-            </Box>
-          </Box>
-        )}
-      </SafeAreaView>
-    </ThemeProvider>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.submitButton}
+                  onPress={showEditForm ? editExpense : addExpense}
+                >
+                  <Text style={styles.buttonText}>{showEditForm ? 'Save' : 'Add'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => {
+                    setShowAddForm(false);
+                    setShowEditForm(false);
+                  }}
+                >
+                  <Text>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      )}
+    </SafeAreaView>
   );
 };
 
